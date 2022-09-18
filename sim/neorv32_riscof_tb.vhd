@@ -15,34 +15,6 @@
 -- # - machine external interrupt (MEI)                                                            #
 -- # - most important: trigger end of simulation using VHDL08's "finish" statement                 #
 -- # ********************************************************************************************* #
--- # BSD 3-Clause License                                                                          #
--- #                                                                                               #
--- # Copyright (c) 2022, Stephan Nolting. All rights reserved.                                     #
--- #                                                                                               #
--- # Redistribution and use in source and binary forms, with or without modification, are          #
--- # permitted provided that the following conditions are met:                                     #
--- #                                                                                               #
--- # 1. Redistributions of source code must retain the above copyright notice, this list of        #
--- #    conditions and the following disclaimer.                                                   #
--- #                                                                                               #
--- # 2. Redistributions in binary form must reproduce the above copyright notice, this list of     #
--- #    conditions and the following disclaimer in the documentation and/or other materials        #
--- #    provided with the distribution.                                                            #
--- #                                                                                               #
--- # 3. Neither the name of the copyright holder nor the names of its contributors may be used to  #
--- #    endorse or promote products derived from this software without specific prior written      #
--- #    permission.                                                                                #
--- #                                                                                               #
--- # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS   #
--- # OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF               #
--- # MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE    #
--- # COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,     #
--- # EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE #
--- # GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED    #
--- # AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING     #
--- # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED  #
--- # OF THE POSSIBILITY OF SUCH DAMAGE.                                                            #
--- # ********************************************************************************************* #
 -- # https://github.com/stnolting/neorv32-riscof                               (c) Stephan Nolting #
 -- #################################################################################################
 
@@ -134,58 +106,51 @@ begin
   neorv32_top_inst: neorv32_top
   generic map (
     -- General --
-    CLOCK_FREQUENCY              => 100000000, -- clock frequency of clk_i in Hz
-    HW_THREAD_ID                 => 0,         -- hardware thread id (hartid) (32-bit)
-    INT_BOOTLOADER_EN            => false,     -- boot configuration: true = boot explicit bootloader; false = boot from int/ext (I)MEM
+    CLOCK_FREQUENCY              => 0, -- irrelevant
+    HW_THREAD_ID                 => 0,
+    INT_BOOTLOADER_EN            => false,
     -- RISC-V CPU Extensions --
-    CPU_EXTENSION_RISCV_B        => RISCV_B,   -- implement bit-manipulation extension?
-    CPU_EXTENSION_RISCV_C        => RISCV_C,   -- implement compressed extension?
-    CPU_EXTENSION_RISCV_E        => RISCV_E,   -- implement embedded RF extension?
-    CPU_EXTENSION_RISCV_M        => RISCV_M,   -- implement mul/div extension?
-    CPU_EXTENSION_RISCV_U        => RISCV_U,   -- implement user mode extension?
-    CPU_EXTENSION_RISCV_Zicsr    => true,      -- implement CSR system?
-    CPU_EXTENSION_RISCV_Zicntr   => true,      -- implement base counters?
-    CPU_EXTENSION_RISCV_Zihpm    => true,      -- implement hardware performance monitors?
-    CPU_EXTENSION_RISCV_Zifencei => true,      -- implement instruction stream sync.?
+    CPU_EXTENSION_RISCV_B        => RISCV_B,
+    CPU_EXTENSION_RISCV_C        => RISCV_C,
+    CPU_EXTENSION_RISCV_E        => RISCV_E,
+    CPU_EXTENSION_RISCV_M        => RISCV_M,
+    CPU_EXTENSION_RISCV_U        => RISCV_U,
+    CPU_EXTENSION_RISCV_Zicsr    => true,
+    CPU_EXTENSION_RISCV_Zicntr   => true,
+    CPU_EXTENSION_RISCV_Zifencei => true,
     -- Extension Options --
-    FAST_MUL_EN                  => true,      -- use DSPs for M extension's multiplier
-    FAST_SHIFT_EN                => false,      -- use barrel shifter for shift operations
-    -- Physical Memory Protection (PMP) --
-    PMP_NUM_REGIONS              => 0,         -- number of regions (0..16)
-    PMP_MIN_GRANULARITY          => 4,         -- minimal region granularity in bytes, has to be a power of 2, min 4 bytes
-    -- Hardware Performance Monitors (HPM) --
-    HPM_NUM_CNTS                 => 12,        -- number of implemented HPM counters (0..29)
-    HPM_CNT_WIDTH                => 40,        -- total size of HPM counters (0..64)
+    FAST_MUL_EN                  => true,
+    FAST_SHIFT_EN                => true,
     -- Internal Instruction memory --
-    MEM_INT_IMEM_EN              => false,     -- implement processor-internal instruction memory
+    MEM_INT_IMEM_EN              => false,
     -- Internal Data memory --
-    MEM_INT_DMEM_EN              => false,     -- implement processor-internal data memory
+    MEM_INT_DMEM_EN              => false,
     -- External memory interface --
-    MEM_EXT_EN                   => true,      -- implement external memory bus interface?
-    MEM_EXT_TIMEOUT              => 32,        -- cycles after a pending bus access auto-terminates (0 = disabled)
-    MEM_EXT_PIPE_MODE            => true,      -- protocol: false=classic/standard wishbone mode, true=pipelined wishbone mode
-    MEM_EXT_BIG_ENDIAN           => false,     -- byte order: true=big-endian, false=little-endian
-    MEM_EXT_ASYNC_RX             => true,      -- use register buffer for RX data when false
-    MEM_EXT_ASYNC_TX             => true,      -- use register buffer for TX data when false
+    MEM_EXT_EN                   => true,
+    MEM_EXT_TIMEOUT              => 16,
+    MEM_EXT_PIPE_MODE            => true,
+    MEM_EXT_BIG_ENDIAN           => false,
+    MEM_EXT_ASYNC_RX             => true,
+    MEM_EXT_ASYNC_TX             => true,
     -- Processor peripherals --
-    IO_MTIME_EN                  => true,      -- implement machine system timer (MTIME)?
-    IO_UART0_EN                  => true       -- implement primary universal asynchronous receiver/transmitter (UART0)?
+    IO_MTIME_EN                  => true,
+    IO_UART0_EN                  => true
   )
   port map (
     -- Global control --
-    clk_i    => clk_gen,                       -- global clock, rising edge
-    rstn_i   => rst_gen,                       -- global reset, low-active, async
+    clk_i    => clk_gen,
+    rstn_i   => rst_gen,
     -- Wishbone bus interface (available if MEM_EXT_EN = true) --
-    wb_tag_o => open,                          -- request tag
-    wb_adr_o => wb_cpu.addr,                   -- address
-    wb_dat_i => wb_cpu.rdata,                  -- read data
-    wb_dat_o => wb_cpu.wdata,                  -- write data
-    wb_we_o  => wb_cpu.we,                     -- read/write
-    wb_sel_o => wb_cpu.sel,                    -- byte enable
-    wb_stb_o => wb_cpu.stb,                    -- strobe
-    wb_cyc_o => wb_cpu.cyc,                    -- valid cycle
-    wb_ack_i => wb_cpu.ack,                    -- transfer acknowledge
-    wb_err_i => '0'                            -- transfer error
+    wb_tag_o => open,
+    wb_adr_o => wb_cpu.addr,
+    wb_dat_i => wb_cpu.rdata,
+    wb_dat_o => wb_cpu.wdata,
+    wb_we_o  => wb_cpu.we,
+    wb_sel_o => wb_cpu.sel,
+    wb_stb_o => wb_cpu.stb,
+    wb_cyc_o => wb_cpu.cyc,
+    wb_ack_i => wb_cpu.ack,
+    wb_err_i => '0'
   );
 
 
@@ -204,7 +169,6 @@ begin
 
       -- write access --
       if ((wb_cpu.cyc and wb_cpu.stb and wb_cpu.we) = '1') then
---assert false report "[0x" & to_hstring32_f(wb_cpu.addr) & "] <= 0x" & to_hstring32_f(wb_cpu.wdata) severity note;
         for i in 0 to 3 loop
           if (wb_cpu.sel(i) = '1') then -- byte-wide access
             case wb_cpu.addr(index_size_f(imem_size_c/4)+3 downto index_size_f(imem_size_c/4)+2) is -- split logical IMEM into 4 *physical* memories
@@ -220,7 +184,6 @@ begin
 
       -- read access --
       if ((wb_cpu.cyc and wb_cpu.stb and (not wb_cpu.we)) = '1') then
---assert false report "[0x" & to_hstring32_f(wb_cpu.addr) & "] = 0x" & to_hstring32_f(to_stdulogicvector(imem_v(to_integer(unsigned(wb_cpu.addr(index_size_f(imem_size_c/4)+1 downto 2)))))) severity note;
         case wb_cpu.addr(index_size_f(imem_size_c/4)+3 downto index_size_f(imem_size_c/4)+2) is -- split logical IMEM into 4 *physical* memories
           when "00" => wb_cpu.rdata <= to_stdulogicvector(imem0_v(to_integer(unsigned(wb_cpu.addr(index_size_f(imem_size_c/4)+1 downto 2))))); -- word aligned
           when "01" => wb_cpu.rdata <= to_stdulogicvector(imem1_v(to_integer(unsigned(wb_cpu.addr(index_size_f(imem_size_c/4)+1 downto 2))))); -- word aligned
