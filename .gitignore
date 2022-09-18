@@ -1,0 +1,11 @@
+*/__*
+
+riscof_work
+
+*.bin
+*.elf
+*.hex
+*.out
+*.signature
+
+*.cf
