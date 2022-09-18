@@ -1,5 +1,5 @@
 -- #################################################################################################
--- # << NEORV32 - RISCOF Testbench for risc-arch-test Verification >>                              #
+-- # << neorv32-riscof - RISCOF Testbench for risc-arch-test Verification >>                       #
 -- # ********************************************************************************************* #
 -- # Minimal NEORV32 CPU testbench for running the RISCOF-base architecture test framework.        #
 -- # The simulation mode of UART0 is used to dump processing data to a file.                       #
@@ -43,7 +43,7 @@
 -- # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED  #
 -- # OF THE POSSIBILITY OF SUCH DAMAGE.                                                            #
 -- # ********************************************************************************************* #
--- # The NEORV32 Processor - https://github.com/stnolting/neorv32              (c) Stephan Nolting #
+-- # https://github.com/stnolting/neorv32-riscof                               (c) Stephan Nolting #
 -- #################################################################################################
 
 library ieee;
