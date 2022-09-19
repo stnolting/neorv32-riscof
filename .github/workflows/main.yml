@@ -6,12 +6,12 @@ on:
 
 jobs:
 
-  verify:
+  neorv32-verification:
     runs-on: ubuntu-latest
 
     steps:
 
-    - name: '📂 Repository Checkout'
+    - name: '📂 Repository checkout'
       uses: actions/checkout@v2
       with:
         fetch-depth: 0
@@ -24,7 +24,7 @@ jobs:
         tar -xzf riscv32-unknown-elf.gcc-12.1.0.tar.gz -C $GITHUB_WORKSPACE/riscv-gcc
         echo $GITHUB_WORKSPACE/riscv-gcc/bin >> $GITHUB_PATH
 
-    - name: '📦 Install sail-riscv model'
+    - name: '📦 Install Sail RISC-V model'
       run: |
         mkdir $GITHUB_WORKSPACE/sail-riscv
         tar -xzf $GITHUB_WORKSPACE/bin/sail-riscv.18.09.22.tar.gz -C $GITHUB_WORKSPACE/sail-riscv
@@ -36,13 +36,13 @@ jobs:
     - name: '📦 Install GHDL'
       uses: ghdl/setup-ghdl-ci@nightly
 
-#   - name: '🔄 Applying riscv-arch-test patch'
-#     run: |
-#       echo "Patching riscv-arch-test..."
-#       cat riscv-arch-test.mtval_ebreak.patch
-#       patch -u riscv-arch-test/riscv-test-suite/env/arch_test.h -i riscv-arch-test.mtval_ebreak.patch
+    - name: '🔄 Apply riscv-arch-test patch'
+      run: |
+        echo "Patching riscv-arch-test submodule..."
+        cat riscv-arch-test.mtval_ebreak.patch
+        patch -u riscv-arch-test/riscv-test-suite/env/arch_test.h -i riscv-arch-test.mtval_ebreak.patch
 
-    - name: '✔️ Check Tools'
+    - name: '🔍 Check tools'
       run: |
         riscv32-unknown-elf-gcc -v
         riscv_sim_RV32 -h
