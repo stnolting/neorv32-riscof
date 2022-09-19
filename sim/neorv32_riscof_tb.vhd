@@ -4,16 +4,14 @@
 -- # Minimal NEORV32 CPU testbench for running the RISCOF-base architecture test framework.        #
 -- # The simulation mode of UART0 is used to dump processing data to a file.                       #
 -- #                                                                                               #
--- # An external IMEM (RAM!) is initialized by a plain ASCII HEX file. The IMEM is split into four #
--- # memory modules of 512kB each using variables of type bit_vector to minimize memory footprint. #
--- # These hacks are requires since GHDL has problems with handling large objects.                 #
+-- # An external IMEM (2MB, RAM!) is initialized by a plain ASCII HEX file. The IMEM is split into #
+-- # four memory modules of 512kB each using variables of type bit_vector to minimize memory       #
+-- # footprint. These hacks are requires since GHDL has problems with handling large objects:      #
 -- # -> https://github.com/ghdl/ghdl/issues/1592                                                   #
--- # The maximum executable size currently comes from the JAL test (~1.7MB).                       #
 -- #                                                                                               #
 -- # Furthermore, the testbench features simulation triggers:                                      #
--- # - machine software interrupt (MSI)                                                            #
--- # - machine external interrupt (MEI)                                                            #
--- # - most important: trigger end of simulation using VHDL08's "finish" statement                 #
+-- # - trigger end of simulation using VHDL08's "finish" statement                                 #
+-- # - TODO: machine software interrupt (MSI) and machine external interrupt (MEI)                 #
 -- # ********************************************************************************************* #
 -- # https://github.com/stnolting/neorv32-riscof                               (c) Stephan Nolting #
 -- #################################################################################################
@@ -29,7 +27,7 @@ use std.env.finish;
 
 entity neorv32_riscof_tb is
   generic (
-    IMEM_FILE : string;           -- memory initialization file (*.hex)
+    IMEM_FILE : string;           -- memory initialization file
     RISCV_B   : boolean := false; -- bit-manipulation ISA extension
     RISCV_C   : boolean := false; -- compressed ISA extension
     RISCV_E   : boolean := false; -- embedded ISA extension
@@ -40,10 +38,10 @@ end neorv32_riscof_tb;
 
 architecture neorv32_riscof_tb_rtl of neorv32_riscof_tb is
 
-  -- IMEM memory type --
+  -- external IMEM memory type --
   type imem_t is array (natural range <>) of bit_vector(31 downto 0); -- memory with 32-bit entries
 
-  -- Initialize imem_t array from ASCII HEX file (starting at file offset 'start') --
+  -- initialize imem_t array from ASCII HEX file (starting at file offset 'start') --
   impure function init_imem_hex(file_name : string; start : natural; num_words : natural) return imem_t is
     file     text_file   : text open read_mode is file_name;
     variable text_line_v : line;
@@ -74,22 +72,22 @@ architecture neorv32_riscof_tb_rtl of neorv32_riscof_tb is
     return mem_v;
   end function init_imem_hex;
 
-  -- external IMEM (initialized from file); size of one module --
-  constant imem_size_c : natural := 512*1024; -- size in bytes (experimental maximum for GHDL)
+  -- external IMEM (initialized from file); size of one module in bytes (experimental!) --
+  constant imem_size_c : natural := 512*1024;
 
   -- generators --
   signal clk_gen, rst_gen : std_ulogic := '0';
 
   -- Wishbone bus --
   type wishbone_t is record
-    addr  : std_ulogic_vector(31 downto 0); -- address
-    wdata : std_ulogic_vector(31 downto 0); -- master write data
-    rdata : std_ulogic_vector(31 downto 0); -- master read data
-    we    : std_ulogic; -- write enable
-    sel   : std_ulogic_vector(03 downto 0); -- byte enable
-    stb   : std_ulogic; -- strobe
-    cyc   : std_ulogic; -- valid cycle
-    ack   : std_ulogic; -- transfer acknowledge
+    addr  : std_ulogic_vector(31 downto 0);
+    wdata : std_ulogic_vector(31 downto 0);
+    rdata : std_ulogic_vector(31 downto 0);
+    we    : std_ulogic;
+    sel   : std_ulogic_vector(03 downto 0);
+    stb   : std_ulogic;
+    cyc   : std_ulogic;
+    ack   : std_ulogic;
   end record;
   signal wb_cpu : wishbone_t;
 
@@ -157,7 +155,7 @@ begin
   -- External IMEM --------------------------------------------------------------------------
   -- -------------------------------------------------------------------------------------------
   ext_imem_rw: process(clk_gen)
-    -- initialize memory modules from HEX file --
+    -- initialize imem from HEX file - split into four memory modules --
     variable imem0_v : imem_t(0 to imem_size_c/4-1) := init_imem_hex(IMEM_FILE, 0*imem_size_c, imem_size_c/4);
     variable imem1_v : imem_t(0 to imem_size_c/4-1) := init_imem_hex(IMEM_FILE, 1*imem_size_c, imem_size_c/4);
     variable imem2_v : imem_t(0 to imem_size_c/4-1) := init_imem_hex(IMEM_FILE, 2*imem_size_c, imem_size_c/4);
@@ -171,7 +169,7 @@ begin
       if ((wb_cpu.cyc and wb_cpu.stb and wb_cpu.we) = '1') then
         for i in 0 to 3 loop
           if (wb_cpu.sel(i) = '1') then -- byte-wide access
-            case wb_cpu.addr(index_size_f(imem_size_c/4)+3 downto index_size_f(imem_size_c/4)+2) is -- split logical IMEM into 4 *physical* memories
+            case wb_cpu.addr(index_size_f(imem_size_c/4)+3 downto index_size_f(imem_size_c/4)+2) is
               when "00" => imem0_v(to_integer(unsigned(wb_cpu.addr(index_size_f(imem_size_c/4)+1 downto 2))))(7+i*8 downto 0+i*8) := to_bitvector(wb_cpu.wdata(7+i*8 downto 0+i*8));
               when "01" => imem1_v(to_integer(unsigned(wb_cpu.addr(index_size_f(imem_size_c/4)+1 downto 2))))(7+i*8 downto 0+i*8) := to_bitvector(wb_cpu.wdata(7+i*8 downto 0+i*8));
               when "10" => imem2_v(to_integer(unsigned(wb_cpu.addr(index_size_f(imem_size_c/4)+1 downto 2))))(7+i*8 downto 0+i*8) := to_bitvector(wb_cpu.wdata(7+i*8 downto 0+i*8));
@@ -184,7 +182,7 @@ begin
 
       -- read access --
       if ((wb_cpu.cyc and wb_cpu.stb and (not wb_cpu.we)) = '1') then
-        case wb_cpu.addr(index_size_f(imem_size_c/4)+3 downto index_size_f(imem_size_c/4)+2) is -- split logical IMEM into 4 *physical* memories
+        case wb_cpu.addr(index_size_f(imem_size_c/4)+3 downto index_size_f(imem_size_c/4)+2) is
           when "00" => wb_cpu.rdata <= to_stdulogicvector(imem0_v(to_integer(unsigned(wb_cpu.addr(index_size_f(imem_size_c/4)+1 downto 2))))); -- word aligned
           when "01" => wb_cpu.rdata <= to_stdulogicvector(imem1_v(to_integer(unsigned(wb_cpu.addr(index_size_f(imem_size_c/4)+1 downto 2))))); -- word aligned
           when "10" => wb_cpu.rdata <= to_stdulogicvector(imem2_v(to_integer(unsigned(wb_cpu.addr(index_size_f(imem_size_c/4)+1 downto 2))))); -- word aligned
