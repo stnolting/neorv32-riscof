@@ -1,4 +1,4 @@
---- arch_test.h	2022-09-19 16:18:10.716372400 +0200
+--- arch_test.neorv32-riscof.h	2022-09-19 16:18:10.716372400 +0200
 +++ riscv-arch-test/riscv-test-suite/env/arch_test.h	2022-09-19 16:28:32.834930300 +0200
 @@ -364,7 +364,16 @@
    
