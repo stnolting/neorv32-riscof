@@ -18,7 +18,7 @@ GHDL="${GHDL:-ghdl}"
 $GHDL -m --std=08 --work=neorv32 neorv32_riscof_tb
 
 # timeout as fall-back; simulation should be terminated by the testbench using "finish;"
-GHDL_TIMEOUT="--stop-time=1ms"
+GHDL_TIMEOUT="--stop-time=2ms"
 
 # custom arguments
 GHDL_RUN_ARGS="${@}"
