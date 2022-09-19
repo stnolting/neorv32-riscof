@@ -36,11 +36,11 @@ jobs:
     - name: '📦 Install GHDL'
       uses: ghdl/setup-ghdl-ci@nightly
 
-    - name: '🔄 Applying riscv-arch-test patch'
-      run: |
-        echo "Patching riscv-arch-test..."
-        cat riscv-arch-test.mtval_ebreak.patch
-        patch -u riscv-arch-test/riscv-test-suite/env/arch_test.h -i riscv-arch-test.mtval_ebreak.patch
+#   - name: '🔄 Applying riscv-arch-test patch'
+#     run: |
+#       echo "Patching riscv-arch-test..."
+#       cat riscv-arch-test.mtval_ebreak.patch
+#       patch -u riscv-arch-test/riscv-test-suite/env/arch_test.h -i riscv-arch-test.mtval_ebreak.patch
 
     - name: '✔️ Check Tools'
       run: |
