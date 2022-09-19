@@ -7,4 +7,14 @@ mtimecmp:
 nmi:
   label: nmi_vector
 reset:
-  label: reset_vector
+  address: 0x00000000
+mtval_condition_writes:
+  implemented: true
+  behaviour:
+    e00: "[0x00000000:0x00000000], 'Instruction fetch - address that was misaligned'"
+    e01: "[0x00000000:0x00000000], 'Instruction fetch - address that triggered a bus exception'"
+    e03: "[0x00000000:0x00000000], 'Breakpoint - set to zero'"
+    e04: "[0x00000000:0x00000000], 'Load access - address that was misaligned'"
+    e05: "[0x00000000:0x00000000], 'Load access - address that triggered a bus exception'"
+    e06: "[0x00000000:0x00000000], 'Store access - address that was misaligned'"
+    e07: "[0x00000000:0x00000000], 'Store access - address that triggered a bus exception'"
