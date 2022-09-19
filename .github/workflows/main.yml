@@ -50,4 +50,6 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: test_report
-        path: riscof_work/report.html
+        path: |
+          riscof_work/report.html
+          riscof_work/style.css
