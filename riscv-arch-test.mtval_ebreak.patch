@@ -10,7 +10,7 @@
 +  mtval_ebreak_patch_begin:
 +          addi t4, zero, 3
 +          bne  t4, t2, mtval_ebreak_patch_end
-+          SREG zero, 3*REGWIDTH(t1) // mtval is zero on ebreak (mcause==3) instruction
++          SREG zero, 3*REGWIDTH(t1) // emulate: mtval is zero on ebreak (mcause==3) exception
 +          j    resto_rtn
 +  mtval_ebreak_patch_end:
 +// ----- END riscv-arch-test.mtval_ebreak patch -----
