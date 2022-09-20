@@ -93,7 +93,7 @@ generator) to generate a memory initialization file from a compiled ELF file.
 The memories are coupled using the processor's Wishbone external bus interface and are mapped to
 the core's reset address at `0x00000000`.
 Each memory module implements a physical memory size of 512kB resulting in a total memory size of 2MB (the
-executable comes from the `I/jal` test that sums up to ~1.7MB). This "splitting" is required as GHDL has
+largest test case executable comes from the `I/jal` with approx. 1.7MB). This "splitting" is required as GHDL has
 problems handling large objects (see https://github.com/ghdl/ghdl/issues/1592).
 
 :books: The "simulation mode" of the processor's UART0 module is used to _dump_ the test result data (= the
@@ -116,16 +116,16 @@ This Python script makes extensive use of shell commands to move and execute fil
 
 ## Compatibility Issues
 
-:warning: The current version of the Sail RISC-V model does not support a target-specific configuration the
-core's events that update the `mtval` CSR: the NEORV32 writes zero to this CSR when encountering an `ebreak`
-(breakpoint) exception while the original model writes the address of the triggering `ebreak` instruction
+:warning: The current version of the Sail RISC-V model does not support a target-specific configuration of the
+core's events that update the `mtval` trap value CSR: the NEORV32 writes zero to this CSR when encountering an `ebreak`
+(breakpoint) exception while the original Sail model writes the address of the triggering `ebreak` instruction
 to `mtval`. However, constraining platform-specific events that write (or not) to `mtval` is explicitly
-allowed by the RISC-V ISA specifications
+allowed by the RISC-V ISA specification
 (see [riscv-software-src/riscv-config/issues/16](https://github.com/riscv-software-src/riscv-config/issues/16)).
 
 To circumvent this, a [patch](https://github.com/stnolting/neorv32-riscof/blob/main/riscv-arch-test.mtval_ebreak.patch)
-is applied to the default `riscv-arch-test` submodule, which adds code to set the `mtval` portion of the signature
-to all-zero if a breakpoint exception occurs.
+is applied to the default `riscv-arch-test` submodule, which adds code to set the `mtval` portion of the test
+signature to all-zero if a breakpoint exception occurs.
 This is only relevant for the `privilege/ebreak.S` and `C/cebreak-01.S` test cases.
 
 This "hack" might be abandoned with future versions of RISCOF/sail.
