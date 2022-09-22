@@ -1,17 +1,17 @@
 -- #################################################################################################
--- # << neorv32-riscof - RISCOF Testbench for risc-arch-test Verification >>                       #
+-- # << neorv32-riscof - Testbench for running RISCOF >>                                           #
 -- # ********************************************************************************************* #
--- # Minimal NEORV32 CPU testbench for running the RISCOF-base architecture test framework.        #
--- # The simulation mode of UART0 is used to dump processing data to a file.                       #
+-- # Minimal NEORV32 CPU testbench for running the RISCOF-based architecture test framework.       #
+-- # The simulation mode of UART0 is used to dump processing data (signatures) to a file.          #
 -- #                                                                                               #
--- # An external IMEM (2MB, RAM!) is initialized by a plain ASCII HEX file. The IMEM is split into #
--- # four memory modules of 512kB each using variables of type bit_vector to minimize memory       #
--- # footprint. These hacks are requires since GHDL has problems with handling large objects:      #
--- # -> https://github.com/ghdl/ghdl/issues/1592                                                   #
+-- # An external IMEM (2MB, RAM) is initialized by a plain ASCII HEX file that contains the        #
+-- # executable and all relevant data. The IMEM is split into four memory modules of 512kB each    #
+-- # using variables of type bit_vector to minimize memory footprint. These hacks are requires     #
+-- since GHDL has problems with handling large objects: https://github.com/ghdl/ghdl/issues/1592   #
 -- #                                                                                               #
 -- # Furthermore, the testbench features simulation triggers:                                      #
 -- # - trigger end of simulation using VHDL08's "finish" statement                                 #
--- # - TODO: machine software interrupt (MSI) and machine external interrupt (MEI)                 #
+-- # - trigger machine software interrupt (MSI) and machine external interrupt (MEI)               #
 -- # ********************************************************************************************* #
 -- # https://github.com/stnolting/neorv32-riscof                               (c) Stephan Nolting #
 -- #################################################################################################
@@ -52,8 +52,8 @@ architecture neorv32_riscof_tb_rtl of neorv32_riscof_tb is
     variable data_v      : std_ulogic_vector(31 downto 0);
   begin
     mem_v := (others => (others => '0'));
-    i_abs_v := 0;
-    i_rel_v := 0;
+    i_abs_v := 0; -- offset inside <num_words>-sized block
+    i_rel_v := 0; -- offset inside whole HEX initialization file
     while (endfile(text_file) = false) and (i_abs_v < ((start/4) + num_words)) loop
       readline(text_file, text_line_v);
       if (i_abs_v >= (start/4)) then -- begin initialization at defined start offset
@@ -75,8 +75,9 @@ architecture neorv32_riscof_tb_rtl of neorv32_riscof_tb is
   -- external IMEM (initialized from file); size of one module in bytes (experimental!) --
   constant imem_size_c : natural := 512*1024;
 
-  -- generators --
+  -- generators/triggers --
   signal clk_gen, rst_gen : std_ulogic := '0';
+  signal msi, mei         : std_ulogic := '0';
 
   -- Wishbone bus --
   type wishbone_t is record
@@ -136,19 +137,23 @@ begin
   )
   port map (
     -- Global control --
-    clk_i    => clk_gen,
-    rstn_i   => rst_gen,
+    clk_i       => clk_gen,
+    rstn_i      => rst_gen,
     -- Wishbone bus interface (available if MEM_EXT_EN = true) --
-    wb_tag_o => open,
-    wb_adr_o => wb_cpu.addr,
-    wb_dat_i => wb_cpu.rdata,
-    wb_dat_o => wb_cpu.wdata,
-    wb_we_o  => wb_cpu.we,
-    wb_sel_o => wb_cpu.sel,
-    wb_stb_o => wb_cpu.stb,
-    wb_cyc_o => wb_cpu.cyc,
-    wb_ack_i => wb_cpu.ack,
-    wb_err_i => '0'
+    wb_tag_o    => open,
+    wb_adr_o    => wb_cpu.addr,
+    wb_dat_i    => wb_cpu.rdata,
+    wb_dat_o    => wb_cpu.wdata,
+    wb_we_o     => wb_cpu.we,
+    wb_sel_o    => wb_cpu.sel,
+    wb_stb_o    => wb_cpu.stb,
+    wb_cyc_o    => wb_cpu.cyc,
+    wb_ack_i    => wb_cpu.ack,
+    wb_err_i    => '0',
+    -- CPU Interrupts --
+    mtime_irq_i => '0',
+    msw_irq_i   => msi,
+    mext_irq_i  => mei
   );
 
 
@@ -205,11 +210,15 @@ begin
           assert false report "Finishing Simulation." severity warning;
           finish; -- VHDL08+ only!
         -- machine software interrupt (MSI) --
-        elsif (wb_cpu.wdata = x"55555555") then
-          NULL; -- TODO
+        elsif (wb_cpu.wdata = x"11111111") then -- set
+          msi <= '1';
+        elsif (wb_cpu.wdata = x"22222222") then -- clear
+          msi <= '0';
         -- machine external interrupt (MEI) --
-        elsif (wb_cpu.wdata = x"EEEEEEEE") then
-          NULL; -- TODO
+        elsif (wb_cpu.wdata = x"33333333") then -- set
+          mei <= '1';
+        elsif (wb_cpu.wdata = x"44444444") then -- clear
+          mei <= '0';
         end if;
       end if;
     end if;
