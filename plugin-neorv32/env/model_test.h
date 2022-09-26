@@ -4,7 +4,7 @@
 #ifndef _COMPLIANCE_MODEL_H
 #define _COMPLIANCE_MODEL_H
 
-#define RVMODEL_DATA_SECTION \
+#define RVMODEL_DATA_SECTION                                                  \
         .pushsection .tohost,"aw",@progbits;                                  \
         .align 8; .global tohost; tohost: .dword 0;                           \
         .align 8; .global fromhost; fromhost: .dword 0;                       \
@@ -21,8 +21,8 @@
 // neorv32: terminate simulation via VHDL2008 "finish", triggered by 0xCAFECAFE -> MEM[0xF0000000]
 #define RVMODEL_HALT                                                          \
       signature_dump:                                                         \
-  			la   a0, begin_signature;                                             \
-				la   a1, end_signature;                                               \
+        la   a0, begin_signature;                                             \
+        la   a1, end_signature;                                               \
         li   a2, 0xFFFFFFA4;                                                  \
       signature_dump_loop:                                                    \
         beq  a0, a1, signature_dump_padding;                                  \
@@ -69,8 +69,8 @@ nop;                                                                          \
         csrw  mscratch, sp;                                                   \
         la    sp, end_signature;                                              \
         addi  sp, sp, 32;                                                     \
-        sw	  x8, 0(sp);                                                      \
-        sw	  x9, 4(sp);                                                      \
+        sw    x8, 0(sp);                                                      \
+        sw    x9, 4(sp);                                                      \
         csrr  x8, mcause;                                                     \
         blt   x8, zero, core_dummy_trap_handler_irq;                          \
         csrr  x8, mepc;                                                       \
