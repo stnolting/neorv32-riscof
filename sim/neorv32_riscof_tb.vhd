@@ -51,7 +51,7 @@ architecture neorv32_riscof_tb_rtl of neorv32_riscof_tb is
     variable char_v      : character;
     variable data_v      : std_ulogic_vector(31 downto 0);
   begin
-    mem_v := (others => (others => '0'));
+    mem_v := (others => (others => '0')); -- initialize to all-zero
     i_abs_v := 0; -- offset inside <num_words>-sized block
     i_rel_v := 0; -- offset inside whole HEX initialization file
     while (endfile(text_file) = false) and (i_abs_v < ((start/4) + num_words)) loop
@@ -160,41 +160,43 @@ begin
   -- External IMEM --------------------------------------------------------------------------
   -- -------------------------------------------------------------------------------------------
   ext_imem_rw: process(clk_gen)
-    -- initialize imem from HEX file - split into four memory modules --
+    -- initialize imem from HEX file - split into four physical memory modules --
     variable imem0_v : imem_t(0 to imem_size_c/4-1) := init_imem_hex(IMEM_FILE, 0*imem_size_c, imem_size_c/4);
     variable imem1_v : imem_t(0 to imem_size_c/4-1) := init_imem_hex(IMEM_FILE, 1*imem_size_c, imem_size_c/4);
     variable imem2_v : imem_t(0 to imem_size_c/4-1) := init_imem_hex(IMEM_FILE, 2*imem_size_c, imem_size_c/4);
     variable imem3_v : imem_t(0 to imem_size_c/4-1) := init_imem_hex(IMEM_FILE, 3*imem_size_c, imem_size_c/4);
   begin
     if rising_edge(clk_gen) then
+
       -- handshake --
       wb_cpu.ack <= wb_cpu.cyc and wb_cpu.stb;
 
-      -- write access --
-      if ((wb_cpu.cyc and wb_cpu.stb and wb_cpu.we) = '1') then
-        for i in 0 to 3 loop
-          if (wb_cpu.sel(i) = '1') then -- byte-wide access
-            case wb_cpu.addr(index_size_f(imem_size_c/4)+3 downto index_size_f(imem_size_c/4)+2) is
-              when "00" => imem0_v(to_integer(unsigned(wb_cpu.addr(index_size_f(imem_size_c/4)+1 downto 2))))(7+i*8 downto 0+i*8) := to_bitvector(wb_cpu.wdata(7+i*8 downto 0+i*8));
-              when "01" => imem1_v(to_integer(unsigned(wb_cpu.addr(index_size_f(imem_size_c/4)+1 downto 2))))(7+i*8 downto 0+i*8) := to_bitvector(wb_cpu.wdata(7+i*8 downto 0+i*8));
-              when "10" => imem2_v(to_integer(unsigned(wb_cpu.addr(index_size_f(imem_size_c/4)+1 downto 2))))(7+i*8 downto 0+i*8) := to_bitvector(wb_cpu.wdata(7+i*8 downto 0+i*8));
-              when "11" => imem3_v(to_integer(unsigned(wb_cpu.addr(index_size_f(imem_size_c/4)+1 downto 2))))(7+i*8 downto 0+i*8) := to_bitvector(wb_cpu.wdata(7+i*8 downto 0+i*8));
-              when others => NULL;
-            end case;
-          end if;
-        end loop; -- i
+      if (wb_cpu.cyc = '1') and (wb_cpu.stb = '1') then
+        -- write access --
+        if (wb_cpu.we = '1') then
+          for i in 0 to 3 loop
+            if (wb_cpu.sel(i) = '1') then -- byte-wide access
+              case wb_cpu.addr(index_size_f(imem_size_c/4)+3 downto index_size_f(imem_size_c/4)+2) is
+                when "00" => imem0_v(to_integer(unsigned(wb_cpu.addr(index_size_f(imem_size_c/4)+1 downto 2))))(7+i*8 downto 0+i*8) := to_bitvector(wb_cpu.wdata(7+i*8 downto 0+i*8));
+                when "01" => imem1_v(to_integer(unsigned(wb_cpu.addr(index_size_f(imem_size_c/4)+1 downto 2))))(7+i*8 downto 0+i*8) := to_bitvector(wb_cpu.wdata(7+i*8 downto 0+i*8));
+                when "10" => imem2_v(to_integer(unsigned(wb_cpu.addr(index_size_f(imem_size_c/4)+1 downto 2))))(7+i*8 downto 0+i*8) := to_bitvector(wb_cpu.wdata(7+i*8 downto 0+i*8));
+                when "11" => imem3_v(to_integer(unsigned(wb_cpu.addr(index_size_f(imem_size_c/4)+1 downto 2))))(7+i*8 downto 0+i*8) := to_bitvector(wb_cpu.wdata(7+i*8 downto 0+i*8));
+                when others => NULL;
+              end case;
+            end if;
+          end loop; -- i
+        -- read access --
+        else
+          case wb_cpu.addr(index_size_f(imem_size_c/4)+3 downto index_size_f(imem_size_c/4)+2) is
+            when "00" => wb_cpu.rdata <= to_stdulogicvector(imem0_v(to_integer(unsigned(wb_cpu.addr(index_size_f(imem_size_c/4)+1 downto 2))))); -- word aligned
+            when "01" => wb_cpu.rdata <= to_stdulogicvector(imem1_v(to_integer(unsigned(wb_cpu.addr(index_size_f(imem_size_c/4)+1 downto 2))))); -- word aligned
+            when "10" => wb_cpu.rdata <= to_stdulogicvector(imem2_v(to_integer(unsigned(wb_cpu.addr(index_size_f(imem_size_c/4)+1 downto 2))))); -- word aligned
+            when "11" => wb_cpu.rdata <= to_stdulogicvector(imem3_v(to_integer(unsigned(wb_cpu.addr(index_size_f(imem_size_c/4)+1 downto 2))))); -- word aligned
+            when others => NULL;
+          end case;
+        end if;
       end if;
 
-      -- read access --
-      if ((wb_cpu.cyc and wb_cpu.stb and (not wb_cpu.we)) = '1') then
-        case wb_cpu.addr(index_size_f(imem_size_c/4)+3 downto index_size_f(imem_size_c/4)+2) is
-          when "00" => wb_cpu.rdata <= to_stdulogicvector(imem0_v(to_integer(unsigned(wb_cpu.addr(index_size_f(imem_size_c/4)+1 downto 2))))); -- word aligned
-          when "01" => wb_cpu.rdata <= to_stdulogicvector(imem1_v(to_integer(unsigned(wb_cpu.addr(index_size_f(imem_size_c/4)+1 downto 2))))); -- word aligned
-          when "10" => wb_cpu.rdata <= to_stdulogicvector(imem2_v(to_integer(unsigned(wb_cpu.addr(index_size_f(imem_size_c/4)+1 downto 2))))); -- word aligned
-          when "11" => wb_cpu.rdata <= to_stdulogicvector(imem3_v(to_integer(unsigned(wb_cpu.addr(index_size_f(imem_size_c/4)+1 downto 2))))); -- word aligned
-          when others => NULL;
-        end case;
-      end if;
     end if;
   end process ext_imem_rw;
 
@@ -205,21 +207,25 @@ begin
   begin
     if rising_edge(clk_gen) then
       if (wb_cpu.cyc = '1') and (wb_cpu.stb = '1') and (wb_cpu.we = '1') and (wb_cpu.addr = x"F0000000") then
-        -- end simulation --
-        if (wb_cpu.wdata = x"CAFECAFE") then
-          assert false report "Finishing Simulation." severity warning;
-          finish; -- VHDL08+ only!
-        -- machine software interrupt (MSI) --
-        elsif (wb_cpu.wdata = x"11111111") then -- set
-          msi <= '1';
-        elsif (wb_cpu.wdata = x"22222222") then -- clear
-          msi <= '0';
-        -- machine external interrupt (MEI) --
-        elsif (wb_cpu.wdata = x"33333333") then -- set
-          mei <= '1';
-        elsif (wb_cpu.wdata = x"44444444") then -- clear
-          mei <= '0';
-        end if;
+        case wb_cpu.wdata is
+          when x"CAFECAFE" => -- end simulation
+            assert false report "Finishing simulation." severity warning;
+            finish; -- VHDL08+ only!
+          when x"11111111" => -- set machine software interrupt (MSI)
+            assert false report "Set MSI." severity warning;
+            msi <= '1';
+          when x"22222222" => -- clear machine software interrupt (MSI)
+            assert false report "Clear MSI." severity warning;
+            msi <= '0';
+          when x"33333333" => -- set machine external interrupt (MEI)
+            assert false report "Set MEI." severity warning;
+            mei <= '1';
+          when x"44444444" => -- clear machine external interrupt (MEI)
+            assert false report "Clear MEI." severity warning;
+            mei <= '0';
+          when others => -- undefined
+            NULL;
+        end case;
       end if;
     end if;
   end process sim_triggers;
