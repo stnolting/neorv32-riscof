@@ -40,7 +40,7 @@ takes care of installing all the required packages.
 * [RISC-V GCC toolchain](https://github.com/stnolting/riscv-gcc-prebuilt) - for compiling native `rv32` code
 * [Sail RISC-V](https://github.com/riscv/sail-riscv) - the reference model
 * [RISCOF](https://github.com/riscv-software-src/riscof) - the architecture test framework
-* [GHDL](https://github.com/ghdl/ghdl) - the _awesome_ VHDL simulator for simulating the DUT
+* [GHDL](https://github.com/ghdl/ghdl) - the _awesome_ VHDL simulator by @tgingold for simulating the DUT
 
 The framework (running all tests) is invoked via a single shell script
 [`run.sh`](https://github.com/stnolting/neorv32-riscof/blob/main/run.sh) that returns 0 if all tests were executed
@@ -93,7 +93,7 @@ generator) to generate a memory initialization file from a compiled ELF file.
 The memories are coupled using the processor's Wishbone external bus interface and are mapped to
 the core's reset address at `0x00000000`.
 Each memory module implements a physical memory size of 512kB resulting in a total memory size of 2MB (the
-largest test case executable comes from the `I/jal` with approx. 1.7MB). This "splitting" is required as GHDL has
+largest test case executable comes from the `I/jal` test case with approx. 1.7MB). This "splitting" is required as GHDL has
 problems handling large objects (see https://github.com/ghdl/ghdl/issues/1592).
 
 :books: The "simulation mode" of the processor's UART0 module is used to _dump_ the test result data (= the
@@ -116,7 +116,9 @@ This Python script makes extensive use of shell commands to move and execute fil
 
 ## Compatibility Issues
 
-:warning: The current version of the Sail RISC-V model does not support a target-specific configuration of the
+:warning: :warning: :warning:
+
+The current version of the Sail RISC-V model does not support a target-specific configuration of the
 core's events that update the `mtval` trap value CSR: the NEORV32 writes zero to this CSR when encountering an `ebreak`
 (breakpoint) exception while the original Sail model writes the address of the triggering `ebreak` instruction
 to `mtval`. However, constraining platform-specific events that write (or not) to `mtval` is explicitly
