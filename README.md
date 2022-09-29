@@ -24,10 +24,6 @@ Currently, the following tests are implemented:
 :bulb: The general structure of this repository was setup according to the
 [RISCOF installation guide](https://riscof.readthedocs.io/en/stable/installation.html).
 
-:loudspeaker: I am planning to replace the Sail model by the more sophisticated
-[Spike](https://github.com/riscv-software-src/riscv-isa-sim) simulator. Any kind of help would be highly
-appreciated. :)
-
 
 ## Prerequisites
 
