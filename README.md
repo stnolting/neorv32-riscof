@@ -36,7 +36,7 @@ takes care of installing all the required packages.
 * [RISC-V GCC toolchain](https://github.com/stnolting/riscv-gcc-prebuilt) - for compiling native `rv32` code
 * [Sail RISC-V](https://github.com/riscv/sail-riscv) - the reference model
 * [RISCOF](https://github.com/riscv-software-src/riscof) - the architecture test framework
-* [GHDL](https://github.com/ghdl/ghdl) - the _awesome_ VHDL simulator by @tgingold for simulating the DUT
+* [GHDL](https://github.com/ghdl/ghdl) - the _awesome_ VHDL simulator for simulating the DUT
 
 The framework (running all tests) is invoked via a single shell script
 [`run.sh`](https://github.com/stnolting/neorv32-riscof/blob/main/run.sh) that returns 0 if all tests were executed
@@ -54,8 +54,8 @@ The ISA, debug and platform specifications, which define target specific configu
 extensions, platform modules like MTIME and ISA spec. versions, are defined via `YAML` files in the DUT's
 plugin folder.
 
-* DUT: "neorv32" in [`plugin-neorv32`](https://github.com/stnolting/neorv32-riscof/tree/main/plugin-neorv32)
-* REF: "sail_cSim" in [`plugin-sail_cSim`](https://github.com/stnolting/neorv32-riscof/tree/main/plugin-sail_cSim)
+* DUT: `neorv32` in [`plugin-neorv32`](https://github.com/stnolting/neorv32-riscof/tree/main/plugin-neorv32)
+* REF: `sail_cSim` in [`plugin-sail_cSim`](https://github.com/stnolting/neorv32-riscof/tree/main/plugin-sail_cSim)
 
 According to the plugin, each plugin folder also provides low-level _environment_ files like linker scripts
 (to generate an executable matching the target's memory layout) and platform-specific code (for example to
