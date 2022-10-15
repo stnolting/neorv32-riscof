@@ -83,6 +83,7 @@ class neorv32(pluginTemplate):
 
        # prepare simulation (GHDL)
        execute = 'sh ./sim/ghdl_setup.sh'
+       logger.debug('DUT executing ' + execute)
        utils.shellCommand(execute).run()
 
        # add more utility snippets here
@@ -160,7 +161,7 @@ class neorv32(pluginTemplate):
 
           # neorv32-specific - dirrrty shell stuff! ;)
 
-          # copy executable
+          # copy ELF to sim folder
           execute = 'cp -f {0}/{1} ./sim/{1}'.format(test_dir, elf)
           logger.debug('DUT executing ' + execute)
           utils.shellCommand(execute).run()
@@ -169,8 +170,6 @@ class neorv32(pluginTemplate):
           execute = 'make -C ./sim clean main.hex'
           logger.debug('DUT executing ' + execute)
           utils.shellCommand(execute).run()
-
-#if run #FIXME!
 
           # prepare run of GHDL simulation
           execute = 'sh ./sim/ghdl_run.sh'
@@ -191,8 +190,6 @@ class neorv32(pluginTemplate):
 
           # debug output
           print(f"{test=}")
-#         print(f"{marchstr=}")
-#         print(f"{execute=}")
 
           # copy resulting signature file
           execute = 'cp -f ./sim/*.signature {0}/.'.format(test_dir)
