@@ -12,7 +12,7 @@ jobs:
     steps:
 
     - name: '📂 Repository checkout'
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         fetch-depth: 0
         submodules: recursive
@@ -53,7 +53,7 @@ jobs:
       run: /bin/bash -c "chmod u+x $GITHUB_WORKSPACE/run.sh && $GITHUB_WORKSPACE/run.sh"
 
     - name: '📤 Archive test report'
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: test_report
         path: |
