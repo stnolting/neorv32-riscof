@@ -12,9 +12,9 @@
 This repository is a port of the "**RISCOF** RISC-V Architectural Test Framework" to test the
 [NEORV32 RISC-V Processor](https://github.com/stnolting/neorv32) for compatibility to the RISC-V
 user and privileged ISA specifications. The **Sail RISC-V** model is used as reference model.
-Currently, the following tests are implemented:
+Currently, the following tests are supported:
 
-- [x] `rv32i_m\B` - bit-manipulation
+- [x] `rv32i_m\B` - bit-manipulation (`Zba`, `Zbb`, `Zbc`, `Zbs`)
 - [x] `rv32i_m\C` - compressed instructions
 - [x] `rv32i_m\I` - base integer ISA
 - [x] `rv32i_m\M` - hardware multiplication and division
@@ -34,7 +34,7 @@ takes care of installing all the required packages.
 * [neorv32](https://github.com/stnolting/neorv32) submodule - the device under test (DUT)
 * [riscv-arch-test](https://github.com/riscv-non-isa/riscv-arch-test) submodule - architecture test cases
 * [RISC-V GCC toolchain](https://github.com/stnolting/riscv-gcc-prebuilt) - for compiling native `rv32` code
-* [Sail RISC-V](https://github.com/riscv/sail-riscv) - the reference model
+* [Sail RISC-V](https://github.com/riscv/sail-riscv) - the reference model (pre-built binary in the [`bin`](https://github.com/stnolting/neorv32-riscof/tree/main/bin) folder)
 * [RISCOF](https://github.com/riscv-software-src/riscof) - the architecture test framework
 * [GHDL](https://github.com/ghdl/ghdl) - the _awesome_ VHDL simulator for simulating the DUT
 
