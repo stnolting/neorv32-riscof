@@ -14,9 +14,14 @@
     .align 8; .global end_regstate; end_regstate:             \
     .word 4;
 
-// NEORV32: this will dump the results via the core's UART0_SIM_MODE data file output feature
-// NEORV32: the simulation is terminated via VHDL2008 "finish" statement, triggered by writing 0xCAFECAFE to address 0xF0000000
+// NEORV32: This will dump the test results (signature) via the core's UART0_SIM_MODE
+// data file output feature. The simulation is terminated via VHDL2008 "finish" statement,
+// triggered by writing 0xCAFECAFE to address 0xF0000000.
 #define RVMODEL_HALT                                          \
+    uart0_sim_mode_init:                                      \
+      sw zero, 0xFFFFFFA0(zero);                              \
+      li   a0, (1 << 28) | (1 << 12);                         \
+      sw   a0, 0xFFFFFFA0(zero);                              \
     signature_dump:                                           \
       la   a0, begin_signature;                               \
       la   a1, end_signature;                                 \
@@ -28,30 +33,25 @@
       addi a0, a0, 4;                                         \
       j    signature_dump_loop;                               \
     signature_dump_end:                                       \
-nop;                                                          \
+      nop;                                                    \
     terminate_simulation:                                     \
       li   a0, 0xF0000000;                                    \
       li   a1, 0xCAFECAFE;                                    \
       sw   a1, 0(a0);                                         \
       j    terminate_simulation
 
-// NEORV32: enable UART0 (UART0.CTRL(28)) and SIM_MODE (UART0.CTRL(12)) feature
-#define RVMODEL_BOOT                                          \
-    core_init:                                                \
-nop;                                                          \
-    uart0_sim_mode_init:                                      \
-      sw zero, 0xFFFFFFA0(zero);                              \
-      li a0,   (1 << 28) | (1 << 12);                         \
-      sw a0,   0xFFFFFFA0(zero);
+#define RVMODEL_BOOT
 
 // declare the start of your signature region here. Nothing else to be used here.
 #define RVMODEL_DATA_BEGIN                                    \
     RVMODEL_DATA_SECTION                                      \
-    .align 4; .global begin_signature; begin_signature:
+    .align 4;                                                 \
+    .global begin_signature; begin_signature:
 
 // declare the end of the signature region here. Add other target specific contents here.
 #define RVMODEL_DATA_END                                      \
-    .align 4; .global end_signature; end_signature:
+    .align 4;                                                 \
+    .global end_signature; end_signature:
 
 //RVTEST_IO_INIT
 #define RVMODEL_IO_INIT
