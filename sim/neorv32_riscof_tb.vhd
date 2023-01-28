@@ -2,16 +2,46 @@
 -- # << neorv32-riscof - Testbench for running RISCOF >>                                           #
 -- # ********************************************************************************************* #
 -- # Minimal NEORV32 CPU testbench for running the RISCOF-based architecture test framework.       #
--- # The simulation mode of UART0 is used to dump processing data (signatures) to a file.          #
+-- # The simulation mode of UART0 is used to dump processing data (test signatures) to a file.     #
 -- #                                                                                               #
 -- # An external IMEM (2MB, RAM) is initialized by a plain ASCII HEX file that contains the        #
 -- # executable and all relevant data. The IMEM is split into four memory modules of 512kB each    #
--- # using variables of type bit_vector to minimize memory footprint. These hacks are requires     #
--- since GHDL has problems with handling large objects: https://github.com/ghdl/ghdl/issues/1592   #
+-- # using variables of type bit_vector to minimize simulation memory footprint. These hacks are   #
+-- # required since GHDL has problems with handling very large objects:                            #
+-- # https://github.com/ghdl/ghdl/issues/1592                                                      #
 -- #                                                                                               #
--- # Furthermore, the testbench features simulation triggers:                                      #
+-- # Furthermore, the testbench features simulation triggers via memory-mapped registers:          #
 -- # - trigger end of simulation using VHDL08's "finish" statement                                 #
--- # - trigger machine software interrupt (MSI) and machine external interrupt (MEI)               #
+-- # - trigger machine software interrupt (MSI)                                                    #
+-- # - trigger machine external interrupt (MEI)                                                    #
+-- # ********************************************************************************************* #
+-- # BSD 3-Clause License                                                                          #
+-- #                                                                                               #
+-- # Copyright (c) 2023, Stephan Nolting. All rights reserved.                                     #
+-- #                                                                                               #
+-- # Redistribution and use in source and binary forms, with or without modification, are          #
+-- # permitted provided that the following conditions are met:                                     #
+-- #                                                                                               #
+-- # 1. Redistributions of source code must retain the above copyright notice, this list of        #
+-- #    conditions and the following disclaimer.                                                   #
+-- #                                                                                               #
+-- # 2. Redistributions in binary form must reproduce the above copyright notice, this list of     #
+-- #    conditions and the following disclaimer in the documentation and/or other materials        #
+-- #    provided with the distribution.                                                            #
+-- #                                                                                               #
+-- # 3. Neither the name of the copyright holder nor the names of its contributors may be used to  #
+-- #    endorse or promote products derived from this software without specific prior written      #
+-- #    permission.                                                                                #
+-- #                                                                                               #
+-- # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS   #
+-- # OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF               #
+-- # MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE    #
+-- # COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,     #
+-- # EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE #
+-- # GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED    #
+-- # AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING     #
+-- # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED  #
+-- # OF THE POSSIBILITY OF SUCH DAMAGE.                                                            #
 -- # ********************************************************************************************* #
 -- # https://github.com/stnolting/neorv32-riscof                               (c) Stephan Nolting #
 -- #################################################################################################
@@ -223,7 +253,7 @@ begin
           when x"44444444" => -- clear machine external interrupt (MEI)
             assert false report "Clear MEI." severity warning;
             mei <= '0';
-          when others => -- undefined
+          when others =>
             NULL;
         end case;
       end if;
