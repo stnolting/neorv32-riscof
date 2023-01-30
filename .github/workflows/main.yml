@@ -36,12 +36,6 @@ jobs:
     - name: '📦 Install GHDL'
       uses: ghdl/setup-ghdl-ci@nightly
 
-    - name: '🔄 Apply riscv-arch-test patch'
-      run: |
-        echo "Patching riscv-arch-test submodule..."
-        cat riscv-arch-test.mtval_ebreak.patch
-        patch -u riscv-arch-test/riscv-test-suite/env/arch_test.h -i riscv-arch-test.mtval_ebreak.patch
-
     - name: '🔍 Check tools'
       run: |
         riscv32-unknown-elf-gcc -v

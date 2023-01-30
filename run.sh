@@ -17,11 +17,11 @@ riscof run --config=config.ini \
            --no-browser
 
 # check report - run successful?
-if grep -rni riscof_work/report.html -e '>0failed<'
+if grep -rniq riscof_work/report.html -e '>0failed<'
 then
   echo "Test successful!"
   exit 0
 else
-  echo "Test failed!"
+  echo "Test FAILED!"
   exit 1
 fi
