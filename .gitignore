@@ -9,3 +9,8 @@ riscof_work
 *.signature
 
 *.cf
+
+sail-riscv/
+
+sim/*.gcno
+sim/*.o
