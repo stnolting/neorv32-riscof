@@ -25,3 +25,9 @@ else
   echo "Test FAILED!"
   exit 1
 fi
+
+#merge coverage
+lcov -c -d ./sim -o neorv32_riscof.info
+#compile coverage output
+genhtml -o html neorv32_riscof.info
+

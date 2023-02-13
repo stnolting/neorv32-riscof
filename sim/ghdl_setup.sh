@@ -7,7 +7,7 @@ cd $(dirname "$0")
 NEORV32_RTL=${NEORV32_RTL:-../neorv32/rtl}
 SRC_FOLDER=${SRC_FOLDER:-.}
 
-# # build library manually as automatic ghdl -i comamnd doestn't handle coverage
+# # build library manually as automatic ghdl -i command doestn't handle coverage parameters
 ghdl -a -Wc,-fprofile-arcs -Wc,-ftest-coverage --work=neorv32 --std=08 "$NEORV32_RTL"/core/neorv32_package.vhd
 ghdl -a -Wc,-fprofile-arcs -Wc,-ftest-coverage --work=neorv32 --std=08 "$NEORV32_RTL"/core/neorv32_application_image.vhd
 ghdl -a -Wc,-fprofile-arcs -Wc,-ftest-coverage --work=neorv32 --std=08 "$NEORV32_RTL"/core/neorv32_bootloader_image.vhd

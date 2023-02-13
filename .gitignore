@@ -12,5 +12,9 @@ riscof_work
 
 sail-riscv/
 
+#coverage simulation
 sim/*.gcno
+sim/*.gcda
 sim/*.o
+sim/neorv32_riscof_tb
+sim/coverage

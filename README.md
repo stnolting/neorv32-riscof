@@ -35,7 +35,8 @@ takes care of installing all the required packages.
 * [RISC-V GCC toolchain](https://github.com/stnolting/riscv-gcc-prebuilt) - for compiling native `rv32` code
 * [Sail RISC-V](https://github.com/riscv/sail-riscv) - the reference model (pre-built binary in the[`bin`](https://github.com/stnolting/neorv32-riscof/tree/main/bin) folder)
 * [RISCOF](https://github.com/riscv-software-src/riscof) - the architecture test framework
-* [GHDL](https://github.com/ghdl/ghdl) - the _awesome_ VHDL simulator for simulating the DUT
+* [GHDL with coverage support](https://github.com/ghdl/ghdl) - the _awesome_ VHDL simulator for simulating the DUT
+
 
 The framework (running all tests) is invoked via a single shell script
 [`run.sh`](https://github.com/stnolting/neorv32-riscof/blob/main/run.sh) that returns 0 if all tests were executed
@@ -104,3 +105,39 @@ specific Python script in the DUT's plugin folder
 This Python script makes extensive use of shell commands to move and execute files and scripts.
 
 [[back to top](#NEORV32-Core-Verification-using-RISCOF)]
+
+
+# coverage
+## GHDL coverage support
+GHDL can support coverage with the help of GCC backend with gcov. 
+To enable this feature you have to recompile GHDL with the official [procedure](https://ghdl.github.io/ghdl/development/building/GCC.html#build-gcc) or applie the one below if you are running Ubuntu 22.04.1 LTS (change gcc version to yours if not). The new `ghdl` application will be installed in `/opt/ghdl`. Do not forget to add it to the path with command `export PATH=/opt/ghdl/bin:$PATH` to replace your previous `ghdl version` by this one for the test.
+
+```bash
+$ sudo apt-get install gnat build-essential libmpc-dev flex bison libz-dev lcov gcc-11-source texinfo gcovr
+$ git clone https://github.com/ghdl/ghdl.git
+$ cd /usr/src/gcc-11
+$ sudo tar xvf gcc-11.3.0.tar.xz 
+$ cd gcc-11.3.0
+$ ./contrib/download_prerequisites 
+$ cd ghdl 
+$ mdir build
+$ cd build
+$ ../configure --with-gcc=/usr/src/gcc-11/gcc-11.3.0 --prefix=/opt/ghdl
+$ make copy-sources
+$ mkdir gcc-objs; cd gcc-objs
+$ /usr/src/gcc-11/gcc-11.3.0/configure  --prefix=/opt/ghdl --enable-languages=c,vhdl --disable-bootstrap --disable-lto --disable-multilib --disable-libssp --disable-libgomp --disable-libquadmath --enable-default-pie
+$ make -j4 && make install MAKEINFO=true
+$ cd ..
+$ make ghdllib
+$ make install
+```
+
+## collecting coverage report for riscof
+The following files have been changed:
+- `ghdl_run.sh` and `ghdl_setup.sh` to include coverage support during ghdl call.
+- `riscof_neorv32.py` to backcup coverage result in a dedicated `coverage` folder.   
+
+Execute `run.sh`
+
+## acknowledgment
+This test was adapted thanks to https://github.com/huettern/ghdl-coverage repository. You can use it to check your ghdl with coverage installation works.
