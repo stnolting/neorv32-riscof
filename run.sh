@@ -21,6 +21,12 @@ lcov -c -d ./sim -o neorv32_riscof.info
 #compile coverage output
 genhtml -o html neorv32_riscof.info
 
+
+##create sonarqube coverage
+gcovr -r . --sonarqube coverage.xml
+
+
+
 # check report - run successful?
 if grep -rniq riscof_work/report.html -e '>0failed<'
 then
@@ -30,9 +36,3 @@ else
   echo "Test FAILED!"
   exit 1
 fi
-
-#merge coverage
-lcov -c -d ./sim -o neorv32_riscof.info
-#compile coverage output
-genhtml -o html neorv32_riscof.info
-
