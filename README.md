@@ -1,8 +1,10 @@
-# NEORV32 Core Verification using RISCOF
+# CV32E40P RISCV Compliance using RISCOF
 
+<!--
 [![neorv32-riscof](https://img.shields.io/github/actions/workflow/status/stnolting/neorv32-riscof/main.yml?branch=main&longCache=true&style=flat-square&label=neorv32-riscof&logo=Github%20Actions&logoColor=fff)](https://github.com/stnolting/neorv32-riscof/actions/workflows/main.yml)
 [![License](https://img.shields.io/github/license/stnolting/neorv32-riscof?longCache=true&style=flat-square&label=License)](https://github.com/stnolting/neorv32-riscof/blob/main/LICENSE)
 [![Gitter](https://img.shields.io/badge/Chat-on%20gitter-4db797.svg?longCache=true&style=flat-square&logo=gitter&logoColor=e8ecef)](https://gitter.im/neorv32/community)
+-->
 
 1. [Prerequisites](#Prerequisites)
 2. [Setup Configuration](#Setup-Configuration)
@@ -32,17 +34,14 @@ takes care of installing all the required packages.
 
 * [neorv32](https://github.com/stnolting/neorv32) submodule - the device under test (DUT)
 * [riscv-arch-test](https://github.com/riscv-non-isa/riscv-arch-test) submodule - architecture test cases
-* [RISC-V GCC toolchain](https://github.com/stnolting/riscv-gcc-prebuilt) - for compiling native `rv32` code
+* [RISC-V GCC toolchain](https://github.com/riscv/riscv-gnu-toolchain) - recommend you follow the installation specified in RISCOF Quick Start
 * [Sail RISC-V](https://github.com/riscv/sail-riscv) - the reference model (pre-built binary in the[`bin`](https://github.com/stnolting/neorv32-riscof/tree/main/bin) folder)
 * [RISCOF](https://github.com/riscv-software-src/riscof) - the architecture test framework
-* [GHDL](https://github.com/ghdl/ghdl) - the _awesome_ VHDL simulator for simulating the DUT
 
-The framework (running all tests) is invoked via a single shell script
-[`run.sh`](https://github.com/stnolting/neorv32-riscof/blob/main/run.sh) that returns 0 if all tests were executed
-successfully or 1 if there were _any_ errors. The exit code of this script is used to determine the overall success
-of the GitHub Actions workflow.
+The framework (running all tests) is invoked via a single shell script **run.sh** that returns 0 if all tests were executed successfully or 1 if there were _any_ errors.
+The exit code of this script is used to determine the overall success of the GitHub Actions workflow.
 
-[[back to top](#NEORV32-Core-Verification-using-RISCOF)]
+[[back to top](#CV32E40P-RISCV-Compliance-using-RISCOF)]
 
 
 ## Setup Configuration
@@ -72,8 +71,7 @@ results of the DUT. The final test report is made available as CSS-flavored HTML
 :bulb: Prebuilt _sail-riscv_ binaries for 64-bit Linux are available in the
 [`bin`](https://github.com/stnolting/neorv32-riscof/tree/main/bin) folder.
 
-[[back to top](#NEORV32-Core-Verification-using-RISCOF)]
-
+[[back to top](#CV32E40P-RISCV-Compliance-using-RISCOF)]
 
 ## Device-Under-Test (DUT)
 
