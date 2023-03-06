@@ -20,7 +20,7 @@
 #define RVMODEL_HALT                                          \
     uart0_sim_mode_init:                                      \
       sw zero, 0xFFFFFFA0(zero);                              \
-      li   a0, (1 << 28) | (1 << 12);                         \
+      li   a0, (1 << 1) | (1 << 0);                           \
       sw   a0, 0xFFFFFFA0(zero);                              \
     signature_dump:                                           \
       la   a0, begin_signature;                               \
