@@ -135,8 +135,7 @@ begin
   neorv32_top_inst: neorv32_top
   generic map (
     -- General --
-    CLOCK_FREQUENCY              => 0, -- irrelevant
-    HW_THREAD_ID                 => 0,
+    CLOCK_FREQUENCY              => 100000000,
     INT_BOOTLOADER_EN            => false,
     -- RISC-V CPU Extensions --
     CPU_EXTENSION_RISCV_B        => RISCV_B,
@@ -156,11 +155,11 @@ begin
     MEM_INT_DMEM_EN              => false,
     -- External memory interface --
     MEM_EXT_EN                   => true,
-    MEM_EXT_TIMEOUT              => 16,
+    MEM_EXT_TIMEOUT              => 8,
     MEM_EXT_PIPE_MODE            => true,
     MEM_EXT_BIG_ENDIAN           => false,
-    MEM_EXT_ASYNC_RX             => true,
-    MEM_EXT_ASYNC_TX             => true,
+    MEM_EXT_ASYNC_RX             => false,
+    MEM_EXT_ASYNC_TX             => false,
     -- Processor peripherals --
     IO_MTIME_EN                  => true,
     IO_UART0_EN                  => true
@@ -190,17 +189,14 @@ begin
   -- External IMEM --------------------------------------------------------------------------
   -- -------------------------------------------------------------------------------------------
   ext_imem_rw: process(clk_gen)
-    -- initialize imem from HEX file - split into four physical memory modules --
+    -- initialize IMEM from HEX file - split into four physical memory modules --
     variable imem0_v : imem_t(0 to imem_size_c/4-1) := init_imem_hex(IMEM_FILE, 0*imem_size_c, imem_size_c/4);
     variable imem1_v : imem_t(0 to imem_size_c/4-1) := init_imem_hex(IMEM_FILE, 1*imem_size_c, imem_size_c/4);
     variable imem2_v : imem_t(0 to imem_size_c/4-1) := init_imem_hex(IMEM_FILE, 2*imem_size_c, imem_size_c/4);
     variable imem3_v : imem_t(0 to imem_size_c/4-1) := init_imem_hex(IMEM_FILE, 3*imem_size_c, imem_size_c/4);
   begin
     if rising_edge(clk_gen) then
-
-      -- handshake --
       wb_cpu.ack <= wb_cpu.cyc and wb_cpu.stb;
-
       if (wb_cpu.cyc = '1') and (wb_cpu.stb = '1') then
         -- write access --
         if (wb_cpu.we = '1') then
@@ -226,7 +222,6 @@ begin
           end case;
         end if;
       end if;
-
     end if;
   end process ext_imem_rw;
 
