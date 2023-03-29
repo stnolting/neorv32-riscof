@@ -143,7 +143,6 @@ begin
     CPU_EXTENSION_RISCV_E        => RISCV_E,
     CPU_EXTENSION_RISCV_M        => RISCV_M,
     CPU_EXTENSION_RISCV_U        => RISCV_U,
-    CPU_EXTENSION_RISCV_Zicsr    => true,
     CPU_EXTENSION_RISCV_Zicntr   => true,
     CPU_EXTENSION_RISCV_Zifencei => true,
     -- Extension Options --
