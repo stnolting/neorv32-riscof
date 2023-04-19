@@ -152,6 +152,15 @@ begin
     MEM_INT_IMEM_EN              => false,
     -- Internal Data memory --
     MEM_INT_DMEM_EN              => false,
+    -- Internal Instruction Cache (iCACHE) --
+    ICACHE_EN                    => true,
+    ICACHE_NUM_BLOCKS            => 4,
+    ICACHE_BLOCK_SIZE            => 64,
+    ICACHE_ASSOCIATIVITY         => 2,
+    -- Internal Data Cache (dCACHE) --
+    DCACHE_EN                    => true,
+    DCACHE_NUM_BLOCKS            => 4,
+    DCACHE_BLOCK_SIZE            => 64,
     -- External memory interface --
     MEM_EXT_EN                   => true,
     MEM_EXT_TIMEOUT              => 8,
