@@ -61,8 +61,7 @@ entity neorv32_riscof_tb is
     RISCV_B   : boolean := false; -- bit-manipulation ISA extension
     RISCV_C   : boolean := false; -- compressed ISA extension
     RISCV_E   : boolean := false; -- embedded ISA extension
-    RISCV_M   : boolean := false; -- hardware mul/div ISA extension
-    RISCV_U   : boolean := false  -- user-mode ISA extension
+    RISCV_M   : boolean := false  -- hardware mul/div ISA extension
   );
 end neorv32_riscof_tb;
 
@@ -142,7 +141,7 @@ begin
     CPU_EXTENSION_RISCV_C        => RISCV_C,
     CPU_EXTENSION_RISCV_E        => RISCV_E,
     CPU_EXTENSION_RISCV_M        => RISCV_M,
-    CPU_EXTENSION_RISCV_U        => RISCV_U,
+    CPU_EXTENSION_RISCV_U        => true,
     CPU_EXTENSION_RISCV_Zicntr   => true,
     CPU_EXTENSION_RISCV_Zifencei => true,
     -- Extension Options --
