@@ -1,5 +1,4 @@
 hart_ids: [0]
-mtval_update: 0b11110011
 hart0:
   ISA: RV32IMCUZicsr_Zifencei_Zba_Zbb_Zbc_Zbs
   physical_addr_sz: 32
