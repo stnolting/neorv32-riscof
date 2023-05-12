@@ -173,7 +173,7 @@ class neorv32(pluginTemplate):
 
           # prepare run of GHDL simulation
           execute = 'sh ./sim/ghdl_run.sh'
-          # set TB generics according to MARCH test case
+          # override testbench generics according to MARCH test case
           if "rv32im" in marchstr:
               execute += ' -gRISCV_M=true'
           # 'privilege' tests also require C extension
