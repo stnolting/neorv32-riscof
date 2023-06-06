@@ -9,3 +9,14 @@ riscof_work
 *.signature
 
 *.cf
+
+sail-riscv/
+
+#coverage simulation
+sim/*.gcno
+sim/*.gcda
+sim/*.o
+sim/neorv32_riscof_tb
+sim/coverage
+html
+neorv32_riscof.info

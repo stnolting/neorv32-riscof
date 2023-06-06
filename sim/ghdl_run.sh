@@ -15,7 +15,8 @@ chmod 777 neorv32.uart0.sim_mode.text.out
 
 GHDL="${GHDL:-ghdl}"
 
-$GHDL -m --std=08 --work=neorv32 neorv32_riscof_tb
+#comment this line has it block coverage and doen't seem to add any value for simulation
+#$GHDL -m --std=08 --work=neorv32 neorv32_riscof_tb
 
 # timeout as fall-back; simulation should be terminated by the testbench using "finish;"
 GHDL_TIMEOUT="--stop-time=2ms"

@@ -117,6 +117,7 @@ class neorv32(pluginTemplate):
 
       # we will iterate over each entry in the testList. Each entry node will be referred to by the
       # variable testname.
+      testID=0
       for testname in testList:
 
           logger.debug('Running Test: {0} on DUT'.format(testname))
@@ -191,6 +192,23 @@ class neorv32(pluginTemplate):
           execute = 'cp -f ./sim/*.signature {0}/.'.format(test_dir)
           logger.debug('DUT executing ' + execute)
           utils.shellCommand(execute).run()
+
+          # save coverage files
+          ## create test result folder
+          execute = 'mkdir -p {0}'.format(os.path.join('./sim/coverage',str(testID)))
+          logger.debug('DUT executing ' + execute)
+          utils.shellCommand(execute).run()
+          
+          ## save coverage result
+          execute = 'cp -f ./sim/*.gcda {0}'.format(os.path.join('./sim/coverage/',str(testID)))
+          logger.debug('DUT executing ' + execute)
+          utils.shellCommand(execute).run()   
+
+          ## save coverage source object
+          execute = 'cp -f ./sim/*.gcno {0}'.format(os.path.join('./sim/coverage/',str(testID)))
+          logger.debug('DUT executing ' + execute)
+          utils.shellCommand(execute).run()   
+          testID=testID+1      
 
 
       # if target runs are not required then we simply exit as this point after running all
