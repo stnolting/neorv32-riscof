@@ -90,13 +90,10 @@ largest test case executable comes from the `I/jal` test case with approx. 1.7MB
 problems handling large objects (see https://github.com/ghdl/ghdl/issues/1592). The memories are attached to the processor
 via its external Wishbone bus interface and are mapped to the core's reset address at `0x00000000`.
 
-:books: The "simulation mode" feature of the processor's UART0 module is used to _dump_ the test result data
-(= the _test signature_) to a file. More information regarding the UART simulation mode can be found in the
-[NEORV32 online documentation](https://stnolting.github.io/neorv32/).
-
-The testbench also provides a "trigger mechanism" to quit the current simulation using VHDL08's `finish`
-statement. Quitting the simulation is triggered by writing `0xCAFECAFE` to address `0xF0000000`, which
-is implemented (software) by the DUT-specific plugin environment module.
+The test output data (= test signature) is written to a file (`DUT-neorv32.signature`) by the testbench
+via write accesses to address `0xF0000004`. The testbench also provides a "trigger mechanism" to quit the
+current simulation using VHDL08's `finish` statement. Quitting the simulation is triggered by writing
+`0xCAFECAFE` to address `0xF0000000`, which is implemented (software) by the DUT-specific plugin environment module.
 
 The simulation scripts and the makefile for generating the memory initialization file are invoked from a DUT-
 specific Python script in the DUT's plugin folder

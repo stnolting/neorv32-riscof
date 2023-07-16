@@ -6,12 +6,9 @@ cd $(dirname "$0")
 
 SRC_FOLDER=${SRC_FOLDER:-.}
 
-# prepare simulation output files for UART0 simulation mode
-# -> direct simulation output (neorv32.uart0.sim_mode.[text|data].out)
-touch neorv32.uart0.sim_mode.data.out
-chmod 777 neorv32.uart0.sim_mode.data.out
-touch neorv32.uart0.sim_mode.text.out
-chmod 777 neorv32.uart0.sim_mode.text.out
+# prepare simulation output file
+touch DUT-neorv32.signature
+chmod 777 DUT-neorv32.signature
 
 GHDL="${GHDL:-ghdl}"
 
@@ -26,10 +23,7 @@ echo "Using custom simulation arguments: $GHDL_RUN_ARGS";
 
 # run simulation
 $GHDL -r --std=08 --work=neorv32 neorv32_riscof_tb \
-  -gIMEM_FILE=${SRC_FOLDER}/main.hex \
+  -gMEM_FILE=${SRC_FOLDER}/main.hex \
   --max-stack-alloc=0 \
   --ieee-asserts=disable \
   --assert-level=error $GHDL_RUN_ARGS $GHDL_TIMEOUT
-
-# Rename final signature file
-cp -f neorv32.uart0.sim_mode.data.out DUT-neorv32.signature

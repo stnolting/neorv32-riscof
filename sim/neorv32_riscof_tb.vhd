@@ -4,13 +4,14 @@
 -- # Minimal NEORV32 CPU testbench for running the RISCOF-based architecture test framework.       #
 -- # The simulation mode of UART0 is used to dump processing data (test signatures) to a file.     #
 -- #                                                                                               #
--- # An external IMEM (2MB, RAM) is initialized by a plain ASCII HEX file that contains the        #
+-- # An external memory (2MB, RAM) is initialized by a plain ASCII HEX file that contains the      #
 -- # executable and all relevant data. The IMEM is split into four memory modules of 512kB each    #
 -- # using variables of type bit_vector to minimize simulation memory footprint. These hacks are   #
 -- # required since GHDL has problems with handling very large objects:                            #
 -- # https://github.com/ghdl/ghdl/issues/1592                                                      #
 -- #                                                                                               #
--- # Furthermore, the testbench features simulation triggers via memory-mapped registers:          #
+-- # Test signature data is dumped to a file "DUT-neorv32.signature" by writing to address         #
+-- # 0xF0000004. Additional simulation triggers are implemented as memory-mapped registers:        #
 -- # - trigger end of simulation using VHDL08's "finish" statement                                 #
 -- # - trigger machine software interrupt (MSI)                                                    #
 -- # - trigger machine external interrupt (MEI)                                                    #
@@ -57,24 +58,24 @@ use std.env.finish;
 
 entity neorv32_riscof_tb is
   generic (
-    IMEM_FILE : string;           -- memory initialization file
-    RISCV_B   : boolean := false; -- bit-manipulation ISA extension
-    RISCV_C   : boolean := false; -- compressed ISA extension
-    RISCV_E   : boolean := false; -- embedded ISA extension
-    RISCV_M   : boolean := false  -- hardware mul/div ISA extension
+    MEM_FILE : string;           -- memory initialization file
+    RISCV_B  : boolean := false; -- bit-manipulation ISA extension
+    RISCV_C  : boolean := false; -- compressed ISA extension
+    RISCV_E  : boolean := false; -- embedded ISA extension
+    RISCV_M  : boolean := false  -- hardware mul/div ISA extension
   );
 end neorv32_riscof_tb;
 
 architecture neorv32_riscof_tb_rtl of neorv32_riscof_tb is
 
-  -- external IMEM memory type --
-  type imem_t is array (natural range <>) of bit_vector(31 downto 0); -- memory with 32-bit entries
+  -- external memory type --
+  type mem_t is array (natural range <>) of bit_vector(31 downto 0); -- memory with 32-bit entries
 
-  -- initialize imem_t array from ASCII HEX file (starting at file offset 'start') --
-  impure function init_imem_hex(file_name : string; start : natural; num_words : natural) return imem_t is
+  -- initialize mem_t array from ASCII HEX file (starting at file offset 'start') --
+  impure function init_mem_hex(file_name : string; start : natural; num_words : natural) return mem_t is
     file     text_file   : text open read_mode is file_name;
     variable text_line_v : line;
-    variable mem_v       : imem_t(0 to num_words-1);
+    variable mem_v       : mem_t(0 to num_words-1);
     variable i_abs_v     : natural;
     variable i_rel_v     : natural;
     variable char_v      : character;
@@ -94,19 +95,19 @@ architecture neorv32_riscof_tb_rtl of neorv32_riscof_tb is
         end loop; -- i
         -- store according byte to memory image --
         mem_v(i_rel_v) := to_bitvector(data_v);
-        i_rel_v := i_rel_v + 1; -- local pointer (for the current IMEM module)
+        i_rel_v := i_rel_v + 1; -- local pointer (for the current MEM module)
       end if;
       i_abs_v := i_abs_v + 1; -- global pointer (for the HEX source file)
     end loop; -- not end of file
     return mem_v;
-  end function init_imem_hex;
+  end function init_mem_hex;
 
-  -- external IMEM (initialized from file); size of one module in bytes (experimental!) --
-  constant imem_size_c : natural := 512*1024;
+  -- external memory (initialized from file); size of one module in bytes (experimental!) --
+  constant mem_size_c : natural := 512*1024;
 
   -- generators/triggers --
   signal clk_gen, rst_gen : std_ulogic := '0';
-  signal msi, mei         : std_ulogic := '0';
+  signal msi, mei, mti    : std_ulogic;
 
   -- Wishbone bus --
   type wishbone_t is record
@@ -165,11 +166,8 @@ begin
     MEM_EXT_TIMEOUT              => 8,
     MEM_EXT_PIPE_MODE            => true,
     MEM_EXT_BIG_ENDIAN           => false,
-    MEM_EXT_ASYNC_RX             => false,
-    MEM_EXT_ASYNC_TX             => false,
-    -- Processor peripherals --
-    IO_MTIME_EN                  => true,
-    IO_UART0_EN                  => true
+    MEM_EXT_ASYNC_RX             => true,
+    MEM_EXT_ASYNC_TX             => true
   )
   port map (
     -- Global control --
@@ -187,80 +185,105 @@ begin
     wb_ack_i    => wb_cpu.ack,
     wb_err_i    => '0',
     -- CPU Interrupts --
-    mtime_irq_i => '0',
+    mtime_irq_i => mti,
     msw_irq_i   => msi,
     mext_irq_i  => mei
   );
 
 
-  -- External IMEM --------------------------------------------------------------------------
+  -- External Memory ------------------------------------------------------------------------
   -- -------------------------------------------------------------------------------------------
-  ext_imem_rw: process(clk_gen)
-    -- initialize IMEM from HEX file - split into four physical memory modules --
-    variable imem0_v : imem_t(0 to imem_size_c/4-1) := init_imem_hex(IMEM_FILE, 0*imem_size_c, imem_size_c/4);
-    variable imem1_v : imem_t(0 to imem_size_c/4-1) := init_imem_hex(IMEM_FILE, 1*imem_size_c, imem_size_c/4);
-    variable imem2_v : imem_t(0 to imem_size_c/4-1) := init_imem_hex(IMEM_FILE, 2*imem_size_c, imem_size_c/4);
-    variable imem3_v : imem_t(0 to imem_size_c/4-1) := init_imem_hex(IMEM_FILE, 3*imem_size_c, imem_size_c/4);
+  ext_mem_rw: process(clk_gen)
+    -- initialize memory from HEX file - split into four individual byte-wide memory modules --
+    variable mem0_v : mem_t(0 to mem_size_c/4-1) := init_mem_hex(MEM_FILE, 0*mem_size_c, mem_size_c/4);
+    variable mem1_v : mem_t(0 to mem_size_c/4-1) := init_mem_hex(MEM_FILE, 1*mem_size_c, mem_size_c/4);
+    variable mem2_v : mem_t(0 to mem_size_c/4-1) := init_mem_hex(MEM_FILE, 2*mem_size_c, mem_size_c/4);
+    variable mem3_v : mem_t(0 to mem_size_c/4-1) := init_mem_hex(MEM_FILE, 3*mem_size_c, mem_size_c/4);
   begin
     if rising_edge(clk_gen) then
       wb_cpu.ack <= wb_cpu.cyc and wb_cpu.stb;
       if (wb_cpu.cyc = '1') and (wb_cpu.stb = '1') then
-        -- write access --
-        if (wb_cpu.we = '1') then
+        if (wb_cpu.we = '1') then -- write access
           for i in 0 to 3 loop
             if (wb_cpu.sel(i) = '1') then -- byte-wide access
-              case wb_cpu.addr(index_size_f(imem_size_c/4)+3 downto index_size_f(imem_size_c/4)+2) is
-                when "00" => imem0_v(to_integer(unsigned(wb_cpu.addr(index_size_f(imem_size_c/4)+1 downto 2))))(7+i*8 downto 0+i*8) := to_bitvector(wb_cpu.wdata(7+i*8 downto 0+i*8));
-                when "01" => imem1_v(to_integer(unsigned(wb_cpu.addr(index_size_f(imem_size_c/4)+1 downto 2))))(7+i*8 downto 0+i*8) := to_bitvector(wb_cpu.wdata(7+i*8 downto 0+i*8));
-                when "10" => imem2_v(to_integer(unsigned(wb_cpu.addr(index_size_f(imem_size_c/4)+1 downto 2))))(7+i*8 downto 0+i*8) := to_bitvector(wb_cpu.wdata(7+i*8 downto 0+i*8));
-                when "11" => imem3_v(to_integer(unsigned(wb_cpu.addr(index_size_f(imem_size_c/4)+1 downto 2))))(7+i*8 downto 0+i*8) := to_bitvector(wb_cpu.wdata(7+i*8 downto 0+i*8));
+              case wb_cpu.addr(index_size_f(mem_size_c/4)+3 downto index_size_f(mem_size_c/4)+2) is
+                when "00" => mem0_v(to_integer(unsigned(wb_cpu.addr(index_size_f(mem_size_c/4)+1 downto 2))))(7+i*8 downto 0+i*8) := to_bitvector(wb_cpu.wdata(7+i*8 downto 0+i*8));
+                when "01" => mem1_v(to_integer(unsigned(wb_cpu.addr(index_size_f(mem_size_c/4)+1 downto 2))))(7+i*8 downto 0+i*8) := to_bitvector(wb_cpu.wdata(7+i*8 downto 0+i*8));
+                when "10" => mem2_v(to_integer(unsigned(wb_cpu.addr(index_size_f(mem_size_c/4)+1 downto 2))))(7+i*8 downto 0+i*8) := to_bitvector(wb_cpu.wdata(7+i*8 downto 0+i*8));
+                when "11" => mem3_v(to_integer(unsigned(wb_cpu.addr(index_size_f(mem_size_c/4)+1 downto 2))))(7+i*8 downto 0+i*8) := to_bitvector(wb_cpu.wdata(7+i*8 downto 0+i*8));
                 when others => NULL;
               end case;
             end if;
           end loop; -- i
-        -- read access --
-        else
-          case wb_cpu.addr(index_size_f(imem_size_c/4)+3 downto index_size_f(imem_size_c/4)+2) is
-            when "00" => wb_cpu.rdata <= to_stdulogicvector(imem0_v(to_integer(unsigned(wb_cpu.addr(index_size_f(imem_size_c/4)+1 downto 2))))); -- word aligned
-            when "01" => wb_cpu.rdata <= to_stdulogicvector(imem1_v(to_integer(unsigned(wb_cpu.addr(index_size_f(imem_size_c/4)+1 downto 2))))); -- word aligned
-            when "10" => wb_cpu.rdata <= to_stdulogicvector(imem2_v(to_integer(unsigned(wb_cpu.addr(index_size_f(imem_size_c/4)+1 downto 2))))); -- word aligned
-            when "11" => wb_cpu.rdata <= to_stdulogicvector(imem3_v(to_integer(unsigned(wb_cpu.addr(index_size_f(imem_size_c/4)+1 downto 2))))); -- word aligned
+        else -- read access
+          case wb_cpu.addr(index_size_f(mem_size_c/4)+3 downto index_size_f(mem_size_c/4)+2) is
+            when "00" => wb_cpu.rdata <= to_stdulogicvector(mem0_v(to_integer(unsigned(wb_cpu.addr(index_size_f(mem_size_c/4)+1 downto 2))))); -- word aligned
+            when "01" => wb_cpu.rdata <= to_stdulogicvector(mem1_v(to_integer(unsigned(wb_cpu.addr(index_size_f(mem_size_c/4)+1 downto 2))))); -- word aligned
+            when "10" => wb_cpu.rdata <= to_stdulogicvector(mem2_v(to_integer(unsigned(wb_cpu.addr(index_size_f(mem_size_c/4)+1 downto 2))))); -- word aligned
+            when "11" => wb_cpu.rdata <= to_stdulogicvector(mem3_v(to_integer(unsigned(wb_cpu.addr(index_size_f(mem_size_c/4)+1 downto 2))))); -- word aligned
             when others => NULL;
           end case;
         end if;
       end if;
     end if;
-  end process ext_imem_rw;
+  end process ext_mem_rw;
 
 
   -- Simulation Triggers --------------------------------------------------------------------
   -- -------------------------------------------------------------------------------------------
-  sim_triggers: process(clk_gen)
+  sim_triggers: process(rst_gen, clk_gen)
   begin
-    if rising_edge(clk_gen) then
+    if (rst_gen = '0') then
+      msi <= '0';
+      mei <= '0';
+      mti <= '0';
+    elsif rising_edge(clk_gen) then
       if (wb_cpu.cyc = '1') and (wb_cpu.stb = '1') and (wb_cpu.we = '1') and (wb_cpu.addr = x"F0000000") then
         case wb_cpu.wdata is
           when x"CAFECAFE" => -- end simulation
-            assert false report "Finishing simulation." severity warning;
+            assert false report "Finishing simulation." severity note;
             finish; -- VHDL08+ only!
           when x"11111111" => -- set machine software interrupt (MSI)
-            assert false report "Set MSI." severity warning;
+            assert false report "Set MSI." severity note;
             msi <= '1';
           when x"22222222" => -- clear machine software interrupt (MSI)
-            assert false report "Clear MSI." severity warning;
+            assert false report "Clear MSI." severity note;
             msi <= '0';
           when x"33333333" => -- set machine external interrupt (MEI)
-            assert false report "Set MEI." severity warning;
+            assert false report "Set MEI." severity note;
             mei <= '1';
           when x"44444444" => -- clear machine external interrupt (MEI)
-            assert false report "Clear MEI." severity warning;
+            assert false report "Clear MEI." severity note;
             mei <= '0';
+          when x"55555555" => -- set machine timer interrupt (MTI)
+            assert false report "Set MTI." severity note;
+            mti <= '1';
+          when x"66666666" => -- clear machine timer interrupt (MTI)
+            assert false report "Clear MTI." severity note;
+            mti <= '0';
           when others =>
             NULL;
         end case;
       end if;
     end if;
   end process sim_triggers;
+
+
+  -- Signature Dump -------------------------------------------------------------------------
+  -- -------------------------------------------------------------------------------------------
+  signature_dump: process(clk_gen)
+    file data_file : text open write_mode is "DUT-neorv32.signature";
+    variable line_data_v : line;
+  begin
+    if rising_edge(clk_gen) then
+      if (wb_cpu.cyc = '1') and (wb_cpu.stb = '1') and (wb_cpu.we = '1') and (wb_cpu.addr = x"F0000004") then
+        for x in 7 downto 0 loop -- write as 8x HEX chars
+          write(line_data_v, to_hexchar_f(wb_cpu.wdata(3+x*4 downto 0+x*4)));
+        end loop;
+        writeline(data_file, line_data_v);
+      end if;
+    end if;
+  end process signature_dump;
 
 
 end neorv32_riscof_tb_rtl;

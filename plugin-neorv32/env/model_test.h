@@ -14,18 +14,12 @@
     .align 8; .global end_regstate; end_regstate:             \
     .word 4;
 
-// NEORV32: This will dump the test results (signature) via the core's UART0_SIM_MODE
-// data file output feature. The simulation is terminated via VHDL2008 "finish" statement,
-// triggered by writing 0xCAFECAFE to address 0xF0000000.
+// This will dump the test results (signature) via the testbench dump module.
 #define RVMODEL_HALT                                          \
-    uart0_sim_mode_init:                                      \
-      sw zero, 0xFFFFFFA0(zero);                              \
-      li   a0, (1 << 1) | (1 << 0);                           \
-      sw   a0, 0xFFFFFFA0(zero);                              \
     signature_dump:                                           \
       la   a0, begin_signature;                               \
       la   a1, end_signature;                                 \
-      li   a2, 0xFFFFFFA4;                                    \
+      li   a2, 0xF0000004;                                    \
     signature_dump_loop:                                      \
       bge  a0, a1, signature_dump_end;                        \
       lw   t0, 0(a0);                                         \
@@ -99,13 +93,19 @@
       li   a1, 0x44444444;                                    \
       sw   a1, 0(a0);
 
+// NEORV32: specify the routine for setting machine timer interrupt
+#define RVMODEL_SET_MTIMER_INT                                \
+    machine_irq_mei_set:                                      \
+      li   a0, 0xF0000000;                                    \
+      li   a1, 0x55555555;                                    \
+      sw   a1, 0(a0);
+
 // NEORV32: specify the routine for clearing machine timer interrupt
 #define RVMODEL_CLEAR_MTIMER_INT                              \
-    machine_irq_mti_clr:                                      \
-      li   a0, 0xFFFFFF90;                                    \
-      li   a1, -1;                                            \
-      sw   a1, 0xc(a0);                                       \
-      sw   a1, 0x8(a0);
+    machine_irq_mei_clr:                                      \
+      li   a0, 0xF0000000;                                    \
+      li   a1, 0x66666666;                                    \
+      sw   a1, 0(a0);
 
 
 #endif // _COMPLIANCE_MODEL_H
