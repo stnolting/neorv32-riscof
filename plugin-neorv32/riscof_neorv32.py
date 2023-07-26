@@ -159,7 +159,7 @@ class neorv32(pluginTemplate):
           utils.shellCommand(cmd).run(cwd=test_dir)
 
 
-          # neorv32-specific - dirrrty shell stuff! ;)
+          # NEORV32-specific hardware configuration (using lots of shell stuff)
 
           # copy ELF to sim folder
           execute = 'cp -f {0}/{1} ./sim/{1}'.format(test_dir, elf)
@@ -172,8 +172,12 @@ class neorv32(pluginTemplate):
           utils.shellCommand(execute).run()
 
           # prepare run of GHDL simulation
-          execute = 'sh ./sim/ghdl_run.sh'
-          # override testbench generics according to MARCH test case
+          execute = 'sh sim/ghdl_run.sh'
+          # set memory size
+          exe_stats = os.stat("sim/main.hex")
+#         print(exe_stats.st_size)
+          execute += ' -gMEM_SIZE=' + str(exe_stats.st_size)
+          # set ISA extensions
           if "rv32im" in marchstr:
               execute += ' -gRISCV_M=true'
           # 'privilege' tests also require C extension
@@ -182,13 +186,14 @@ class neorv32(pluginTemplate):
           if "rv32izba" in marchstr or "rv32izbb" in marchstr or "rv32izbc" in marchstr or "rv32izbs" in marchstr:
               execute += ' -gRISCV_B=true'
           logger.debug('DUT executing ' + execute)
+#         print(execute)
           utils.shellCommand(execute).run()
 
           # debug output
           print(f"{test=}")
 
           # copy resulting signature file
-          execute = 'cp -f ./sim/*.signature {0}/.'.format(test_dir)
+          execute = 'cp -f ./sim/DUT-neorv32.signature {0}/.'.format(test_dir)
           logger.debug('DUT executing ' + execute)
           utils.shellCommand(execute).run()
 
