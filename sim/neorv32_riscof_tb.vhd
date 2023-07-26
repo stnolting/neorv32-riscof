@@ -75,7 +75,7 @@ architecture neorv32_riscof_tb_rtl of neorv32_riscof_tb is
 
   -- maximum memory size in bytes --
   -- [NOTE] sizes >= 4MB are crashing GHDL in this setup; maximum still-OK-size = 3MB
-  constant mem_size_max_c : natural := 2*1024*1024; -- 2MB
+  constant mem_size_max_c : natural := 2*1024*1024; -- just use 2MB as maximum to be safe ;)
 
   -- make sure actual memory size is a power of two (or <mem_size_max_c> for the rare case or very large images) --
   constant mem_size_c : natural := cond_sel_natural_f(boolean(MEM_SIZE >= mem_size_max_c), mem_size_max_c, 2**index_size_f(MEM_SIZE));
@@ -101,7 +101,7 @@ architecture neorv32_riscof_tb_rtl of neorv32_riscof_tb is
         when 1      => mem8_v(index_v) := word_v(15 downto 08);
         when 2      => mem8_v(index_v) := word_v(23 downto 16);
         when 3      => mem8_v(index_v) := word_v(31 downto 24);
-        when others => mem8_v(index_v) := x"00";
+        when others => mem8_v(index_v) := (others => '-');
       end case;
       index_v := index_v + 1;
     end loop;
@@ -246,7 +246,7 @@ begin
         case wb_cpu.wdata is
           when x"CAFECAFE" => -- end simulation
             assert false report "Finishing simulation." severity note;
-            finish; -- VHDL08+ only!
+            finish;
           when x"11111111" => -- set machine software interrupt (MSI)
             assert false report "Set MSI." severity note;
             msi <= '1';
@@ -281,7 +281,9 @@ begin
   begin
     if rising_edge(clk_gen) then
       if (wb_cpu.cyc = '1') and (wb_cpu.stb = '1') and (wb_cpu.we = '1') and (wb_cpu.addr = x"F0000004") then
-        hwrite(line_v, wb_cpu.wdata(31 downto 0), left, 8); -- write 32-bit as 8x hex chars [NOTE: UPPERCASE!]
+        for i in 7 downto 0 loop -- write 32-bit as 8x lowercase HEX chars
+          write(line_v, to_hexchar_f(wb_cpu.wdata(3+i*4 downto 0+i*4)));
+        end loop;
         writeline(dump_file, line_v);
       end if;
     end if;
