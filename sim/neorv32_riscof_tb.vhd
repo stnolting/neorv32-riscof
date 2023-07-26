@@ -15,6 +15,8 @@
 -- # - trigger end of simulation using VHDL08's "finish" statement                                 #
 -- # - trigger machine software interrupt (MSI)                                                    #
 -- # - trigger machine external interrupt (MEI)                                                    #
+-- #                                                                                               #
+-- # This testbench uses VHDL2008!                                                                 #
 -- # ********************************************************************************************* #
 -- # BSD 3-Clause License                                                                          #
 -- #                                                                                               #
@@ -47,69 +49,73 @@
 -- # https://github.com/stnolting/neorv32-riscof                               (c) Stephan Nolting #
 -- #################################################################################################
 
+library std;
+use std.textio.all;
+use std.env.finish;
+
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 library neorv32;
 use neorv32.neorv32_package.all;
-use std.textio.all;
-use std.env.finish;
 
 entity neorv32_riscof_tb is
   generic (
-    MEM_FILE : string;           -- memory initialization file
-    RISCV_B  : boolean := false; -- bit-manipulation ISA extension
-    RISCV_C  : boolean := false; -- compressed ISA extension
-    RISCV_E  : boolean := false; -- embedded ISA extension
-    RISCV_M  : boolean := false  -- hardware mul/div ISA extension
+    MEM_FILE : string;            -- memory initialization file
+    MEM_SIZE : natural := 8*1024; -- total memory size in bytes
+    RISCV_B  : boolean := false;  -- bit-manipulation ISA extension
+    RISCV_C  : boolean := false;  -- compressed ISA extension
+    RISCV_E  : boolean := false;  -- embedded ISA extension
+    RISCV_M  : boolean := false   -- hardware mul/div ISA extension
   );
 end neorv32_riscof_tb;
 
 architecture neorv32_riscof_tb_rtl of neorv32_riscof_tb is
 
-  -- external memory type --
-  type mem_t is array (natural range <>) of bit_vector(31 downto 0); -- memory with 32-bit entries
+  -- maximum memory size in bytes --
+  -- [NOTE] sizes >= 4MB are crashing GHDL in this setup; maximum still-OK-size = 3MB
+  constant mem_size_max_c : natural := 2*1024*1024; -- 2MB
 
-  -- initialize mem_t array from ASCII HEX file (starting at file offset 'start') --
-  impure function init_mem_hex(file_name : string; start : natural; num_words : natural) return mem_t is
+  -- make sure actual memory size is a power of two (or <mem_size_max_c> for the rare case or very large images) --
+  constant mem_size_c : natural := cond_sel_natural_f(boolean(MEM_SIZE >= mem_size_max_c), mem_size_max_c, 2**index_size_f(MEM_SIZE));
+
+  -- memory type --
+  type mem8_t is array (natural range <>) of bit_vector(7 downto 0);
+
+  -- initialize mem8_t array from ASCII HEX file  --
+  impure function mem8_init_f(file_name : string; num_bytes : natural; byte_sel : natural) return mem8_t is
     file     text_file   : text open read_mode is file_name;
     variable text_line_v : line;
-    variable mem_v       : mem_t(0 to num_words-1);
-    variable i_abs_v     : natural;
-    variable i_rel_v     : natural;
-    variable char_v      : character;
-    variable data_v      : std_ulogic_vector(31 downto 0);
+    variable mem8_v      : mem8_t(0 to num_bytes-1);
+    variable index_v     : natural;
+    variable word_v      : bit_vector(31 downto 0);
   begin
-    mem_v := (others => (others => '0')); -- initialize to all-zero
-    i_abs_v := 0; -- offset inside <num_words>-sized block
-    i_rel_v := 0; -- offset inside whole HEX initialization file
-    while (endfile(text_file) = false) and (i_abs_v < ((start/4) + num_words)) loop
+    mem8_v  := (others => (others => '0')); -- initialize to all-zero
+    index_v := 0;
+    while (endfile(text_file) = false) and (index_v < num_bytes) loop
       readline(text_file, text_line_v);
-      if (i_abs_v >= (start/4)) then -- begin initialization at defined start offset
-        -- construct one 32-bit word --
-        data_v := (others => '0');
-        for i in 7 downto 0 loop -- 32-bit = 8 hex chars
-          read(text_line_v, char_v); -- get one hex char
-          data_v(i*4+3 downto i*4) := hexchar_to_stdulogicvector_f(char_v);
-        end loop; -- i
-        -- store according byte to memory image --
-        mem_v(i_rel_v) := to_bitvector(data_v);
-        i_rel_v := i_rel_v + 1; -- local pointer (for the current MEM module)
-      end if;
-      i_abs_v := i_abs_v + 1; -- global pointer (for the HEX source file)
-    end loop; -- not end of file
-    return mem_v;
-  end function init_mem_hex;
+      hread(text_line_v, word_v);
+      case byte_sel is
+        when 0      => mem8_v(index_v) := word_v(07 downto 00);
+        when 1      => mem8_v(index_v) := word_v(15 downto 08);
+        when 2      => mem8_v(index_v) := word_v(23 downto 16);
+        when 3      => mem8_v(index_v) := word_v(31 downto 24);
+        when others => mem8_v(index_v) := x"00";
+      end case;
+      index_v := index_v + 1;
+    end loop;
+    return mem8_v;
+  end function mem8_init_f;
 
-  -- external memory (initialized from file); size of one module in bytes (experimental!) --
-  constant mem_size_c : natural := 512*1024;
+  -- memory read/write address --
+  signal addr : integer range 0 to (mem_size_c/4)-1;
 
   -- generators/triggers --
   signal clk_gen, rst_gen : std_ulogic := '0';
   signal msi, mei, mti    : std_ulogic;
 
-  -- Wishbone bus --
+  -- wishbone bus --
   type wishbone_t is record
     addr  : std_ulogic_vector(31 downto 0);
     wdata : std_ulogic_vector(31 downto 0);
@@ -123,6 +129,11 @@ architecture neorv32_riscof_tb_rtl of neorv32_riscof_tb is
   signal wb_cpu : wishbone_t;
 
 begin
+
+  -- Debug Info -----------------------------------------------------------------------------
+  -- -------------------------------------------------------------------------------------------
+  assert false report "TB: actual memory size = " & integer'image(mem_size_c) & " bytes" severity warning;
+
 
   -- Clock/Reset Generator ------------------------------------------------------------------
   -- -------------------------------------------------------------------------------------------
@@ -191,42 +202,35 @@ begin
   );
 
 
-  -- External Memory ------------------------------------------------------------------------
+  -- External Main Memory [rwx] - Constructed from four parallel byte-wide memories ---------
   -- -------------------------------------------------------------------------------------------
   ext_mem_rw: process(clk_gen)
-    -- initialize memory from HEX file - split into four individual byte-wide memory modules --
-    variable mem0_v : mem_t(0 to mem_size_c/4-1) := init_mem_hex(MEM_FILE, 0*mem_size_c, mem_size_c/4);
-    variable mem1_v : mem_t(0 to mem_size_c/4-1) := init_mem_hex(MEM_FILE, 1*mem_size_c, mem_size_c/4);
-    variable mem2_v : mem_t(0 to mem_size_c/4-1) := init_mem_hex(MEM_FILE, 2*mem_size_c, mem_size_c/4);
-    variable mem3_v : mem_t(0 to mem_size_c/4-1) := init_mem_hex(MEM_FILE, 3*mem_size_c, mem_size_c/4);
+    variable mem8_b0_v : mem8_t(0 to (mem_size_c/4)-1) := mem8_init_f(MEM_FILE, mem_size_c/4, 0); -- byte[0]
+    variable mem8_b1_v : mem8_t(0 to (mem_size_c/4)-1) := mem8_init_f(MEM_FILE, mem_size_c/4, 1); -- byte[1]
+    variable mem8_b2_v : mem8_t(0 to (mem_size_c/4)-1) := mem8_init_f(MEM_FILE, mem_size_c/4, 2); -- byte[2]
+    variable mem8_b3_v : mem8_t(0 to (mem_size_c/4)-1) := mem8_init_f(MEM_FILE, mem_size_c/4, 3); -- byte[3]
   begin
     if rising_edge(clk_gen) then
-      wb_cpu.ack <= wb_cpu.cyc and wb_cpu.stb;
+      wb_cpu.ack   <= wb_cpu.cyc and wb_cpu.stb;
+      wb_cpu.rdata <= (others => '0');
       if (wb_cpu.cyc = '1') and (wb_cpu.stb = '1') then
-        if (wb_cpu.we = '1') then -- write access
-          for i in 0 to 3 loop
-            if (wb_cpu.sel(i) = '1') then -- byte-wide access
-              case wb_cpu.addr(index_size_f(mem_size_c/4)+3 downto index_size_f(mem_size_c/4)+2) is
-                when "00" => mem0_v(to_integer(unsigned(wb_cpu.addr(index_size_f(mem_size_c/4)+1 downto 2))))(7+i*8 downto 0+i*8) := to_bitvector(wb_cpu.wdata(7+i*8 downto 0+i*8));
-                when "01" => mem1_v(to_integer(unsigned(wb_cpu.addr(index_size_f(mem_size_c/4)+1 downto 2))))(7+i*8 downto 0+i*8) := to_bitvector(wb_cpu.wdata(7+i*8 downto 0+i*8));
-                when "10" => mem2_v(to_integer(unsigned(wb_cpu.addr(index_size_f(mem_size_c/4)+1 downto 2))))(7+i*8 downto 0+i*8) := to_bitvector(wb_cpu.wdata(7+i*8 downto 0+i*8));
-                when "11" => mem3_v(to_integer(unsigned(wb_cpu.addr(index_size_f(mem_size_c/4)+1 downto 2))))(7+i*8 downto 0+i*8) := to_bitvector(wb_cpu.wdata(7+i*8 downto 0+i*8));
-                when others => NULL;
-              end case;
-            end if;
-          end loop; -- i
-        else -- read access
-          case wb_cpu.addr(index_size_f(mem_size_c/4)+3 downto index_size_f(mem_size_c/4)+2) is
-            when "00" => wb_cpu.rdata <= to_stdulogicvector(mem0_v(to_integer(unsigned(wb_cpu.addr(index_size_f(mem_size_c/4)+1 downto 2))))); -- word aligned
-            when "01" => wb_cpu.rdata <= to_stdulogicvector(mem1_v(to_integer(unsigned(wb_cpu.addr(index_size_f(mem_size_c/4)+1 downto 2))))); -- word aligned
-            when "10" => wb_cpu.rdata <= to_stdulogicvector(mem2_v(to_integer(unsigned(wb_cpu.addr(index_size_f(mem_size_c/4)+1 downto 2))))); -- word aligned
-            when "11" => wb_cpu.rdata <= to_stdulogicvector(mem3_v(to_integer(unsigned(wb_cpu.addr(index_size_f(mem_size_c/4)+1 downto 2))))); -- word aligned
-            when others => NULL;
-          end case;
+        if (wb_cpu.we = '1') then -- byte-wide write access
+          if (wb_cpu.sel(0) = '1') then mem8_b0_v(addr) := to_bitvector(wb_cpu.wdata(07 downto 00)); end if;
+          if (wb_cpu.sel(1) = '1') then mem8_b1_v(addr) := to_bitvector(wb_cpu.wdata(15 downto 08)); end if;
+          if (wb_cpu.sel(2) = '1') then mem8_b2_v(addr) := to_bitvector(wb_cpu.wdata(23 downto 16)); end if;
+          if (wb_cpu.sel(3) = '1') then mem8_b3_v(addr) := to_bitvector(wb_cpu.wdata(31 downto 24)); end if;
+        else -- word-aligned read access
+          wb_cpu.rdata(07 downto 00) <= to_stdulogicvector(mem8_b0_v(addr));
+          wb_cpu.rdata(15 downto 08) <= to_stdulogicvector(mem8_b1_v(addr));
+          wb_cpu.rdata(23 downto 16) <= to_stdulogicvector(mem8_b2_v(addr));
+          wb_cpu.rdata(31 downto 24) <= to_stdulogicvector(mem8_b3_v(addr));
         end if;
       end if;
     end if;
   end process ext_mem_rw;
+
+  -- read/write address --
+  addr <= to_integer(unsigned(wb_cpu.addr(index_size_f(mem_size_c/4)+1 downto 2)));
 
 
   -- Simulation Triggers --------------------------------------------------------------------
@@ -272,15 +276,13 @@ begin
   -- Signature Dump -------------------------------------------------------------------------
   -- -------------------------------------------------------------------------------------------
   signature_dump: process(clk_gen)
-    file data_file : text open write_mode is "DUT-neorv32.signature";
-    variable line_data_v : line;
+    file     dump_file : text open write_mode is "DUT-neorv32.signature";
+    variable line_v    : line;
   begin
     if rising_edge(clk_gen) then
       if (wb_cpu.cyc = '1') and (wb_cpu.stb = '1') and (wb_cpu.we = '1') and (wb_cpu.addr = x"F0000004") then
-        for x in 7 downto 0 loop -- write as 8x HEX chars
-          write(line_data_v, to_hexchar_f(wb_cpu.wdata(3+x*4 downto 0+x*4)));
-        end loop;
-        writeline(data_file, line_data_v);
+        hwrite(line_v, wb_cpu.wdata(31 downto 0), left, 8); -- write 32-bit as 8x hex chars [NOTE: UPPERCASE!]
+        writeline(dump_file, line_v);
       end if;
     end if;
   end process signature_dump;
