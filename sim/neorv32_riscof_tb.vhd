@@ -100,8 +100,7 @@ architecture neorv32_riscof_tb_rtl of neorv32_riscof_tb is
         when 0      => mem8_v(index_v) := word_v(07 downto 00);
         when 1      => mem8_v(index_v) := word_v(15 downto 08);
         when 2      => mem8_v(index_v) := word_v(23 downto 16);
-        when 3      => mem8_v(index_v) := word_v(31 downto 24);
-        when others => mem8_v(index_v) := (others => '-');
+        when others => mem8_v(index_v) := word_v(31 downto 24);
       end case;
       index_v := index_v + 1;
     end loop;
