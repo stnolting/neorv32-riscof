@@ -78,6 +78,23 @@ class sail_cSim(pluginTemplate):
             logger.error(self.make+": executable not found. Please check environment setup.")
             raise SystemExit(1)
 
+        # Override default exception relocation list - remove EBREAK exception since NEORV32 clears MTVAL
+        # when encountering this type of exception (permitted by RISC-V priv. spec.)
+        print("<plugin-sail_cSim> overriding default SET_REL_TVAL_MSK macro (removing BREAKPOINT exception)")
+        neorv32_override = ' \"-DSET_REL_TVAL_MSK=(('
+        neorv32_override = neorv32_override+'(1<<CAUSE_MISALIGNED_FETCH) | '
+        neorv32_override = neorv32_override+'(1<<CAUSE_FETCH_ACCESS)     | '
+#       neorv32_override = neorv32_override+'(1<<CAUSE_BREAKPOINT)       | '
+        neorv32_override = neorv32_override+'(1<<CAUSE_MISALIGNED_LOAD)  | '
+        neorv32_override = neorv32_override+'(1<<CAUSE_LOAD_ACCESS)      | '
+        neorv32_override = neorv32_override+'(1<<CAUSE_MISALIGNED_STORE) | '
+        neorv32_override = neorv32_override+'(1<<CAUSE_STORE_ACCESS)     | '
+        neorv32_override = neorv32_override+'(1<<CAUSE_FETCH_PAGE_FAULT) | '
+        neorv32_override = neorv32_override+'(1<<CAUSE_LOAD_PAGE_FAULT)  | '
+        neorv32_override = neorv32_override+'(1<<CAUSE_STORE_PAGE_FAULT)   '
+        neorv32_override = neorv32_override+') & 0xFFFFFFFF)\" '
+        self.compile_cmd = self.compile_cmd+neorv32_override
+
 
     def runTests(self, testList, cgf_file=None):
         if os.path.exists(self.work_dir+ "/Makefile." + self.name[:-1]):
