@@ -2,11 +2,10 @@
 
 [![neorv32-riscof](https://img.shields.io/github/actions/workflow/status/stnolting/neorv32-riscof/main.yml?branch=main&longCache=true&style=flat-square&label=neorv32-riscof&logo=Github%20Actions&logoColor=fff)](https://github.com/stnolting/neorv32-riscof/actions/workflows/main.yml)
 [![License](https://img.shields.io/github/license/stnolting/neorv32-riscof?longCache=true&style=flat-square&label=License)](https://github.com/stnolting/neorv32-riscof/blob/main/LICENSE)
-[![Gitter](https://img.shields.io/badge/Chat-on%20gitter-4db797.svg?longCache=true&style=flat-square&logo=gitter&logoColor=e8ecef)](https://gitter.im/neorv32/community)
 
-1. [Prerequisites](#Prerequisites)
-2. [Setup Configuration](#Setup-Configuration)
-3. [Device-Under-Test (DUT)](#Device-Under-Test-DUT)
+1. [Prerequisites](#prerequisites)
+2. [Setup Configuration](#setup-configuration)
+3. [Device-Under-Test (DUT)](#device-under-test-dut)
 
 This repository is a port of the "**RISCOF** RISC-V Architectural Test Framework" to test the
 [NEORV32 RISC-V Processor](https://github.com/stnolting/neorv32) for compatibility to the RISC-V
@@ -16,8 +15,8 @@ Currently, the following tests are supported:
 - [x] `rv32i_m\B` - bit-manipulation (`Zba` + `Zbb` + `Zbc` + `Zbs`)
 - [x] `rv32i_m\C` - compressed instructions
 - [x] `rv32i_m\I` - base integer ISA
-- [x] `rv32i_m\M` - hardware multiplication and division
-- [x] `rv32i_m\privilege` - privileged machine architecture
+- [x] `rv32i_m\M` - hardware integer multiplication and division
+- [x] `rv32i_m\privilege` - privileged machine-mode architecture
 - [x] `rv32i_m\Zifencei` - instruction stream synchronization
 
 :bulb: The general structure of this repository was setup according to the
@@ -43,7 +42,7 @@ The framework (running all tests) is invoked via a single shell script
 successfully or 1 if there were any errors. The exit code of this script is used to determine the overall success
 of the GitHub Actions workflow.
 
-[[back to top](#NEORV32-Core-Verification-using-RISCOF)]
+[[back to top](#neorv32-core-verification-using-riscof)]
 
 
 ## Setup Configuration
@@ -72,7 +71,7 @@ the DUT. The final test report is made available as CSS-flavored HTML file via t
 :bulb: Prebuilt _sail-riscv_ binaries for 64-bit x86 Linux are available in the
 [`bin`](https://github.com/stnolting/neorv32-riscof/tree/main/bin) folder.
 
-[[back to top](#NEORV32-Core-Verification-using-RISCOF)]
+[[back to top](#neorv32-core-verification-using-riscof)]
 
 
 ## Device-Under-Test (DUT)
@@ -80,7 +79,7 @@ the DUT. The final test report is made available as CSS-flavored HTML file via t
 The [`sim`](https://github.com/stnolting/neorv32-riscof/tree/main/sim) folder provides a plain-VHDL testbench
 and shell scripts to simulate the NEORV32 processor using **GHDL**. The testbench provides generics to configure the
 DUT's RISC-V ISA extensions and also to pass a plain ASCII HEX file, which represents the _memory image_ containing
-the actual executable. This file generated from a test-case-specific ELF file. The maakefile in the `sim` folder
+the actual executable. This file generated from a test-case-specific ELF file. The makefile in the `sim` folder
 takes care of compilation and will also convert the final memory image into a plain HEX file. Note that this makefile
 uses the default software framework from the NEORV32 submodule.
 
@@ -100,4 +99,8 @@ a DUT-specific Python script in the DUT's plugin folder
 (-> [`plugin-neorv32/riscof_neorv32.py`](https://github.com/stnolting/neorv32-riscof/blob/main/plugin-neorv32/riscof_neorv32.py)).
 This Python script makes extensive use of shell commands to move and execute files and scripts.
 
-[[back to top](#NEORV32-Core-Verification-using-RISCOF)]
+:warning: The Python scripts of **both plugins** override the default `SET_REL_TVAL_MSK` macro from
+`riscv-arch-test/riscv-test-suite/env/arch_test.h` to remove the BREAK exception cause from the relocation list as the
+NEORV32 sets `mtval` to zero for this type of exception. This is **explicitly permitted** by the RISC-V priv. spec.
+
+[[back to top](#neorv32-core-verification-using-riscof)]
