@@ -86,8 +86,6 @@ class neorv32(pluginTemplate):
        logger.debug('DUT executing ' + execute)
        utils.shellCommand(execute).run()
 
-       # add more utility snippets here
-
     def build(self, isa_yaml, platform_yaml):
 
       # load the isa yaml as a dictionary in python.
@@ -107,9 +105,24 @@ class neorv32(pluginTemplate):
       if "C" in ispec["ISA"]:
           self.isa += 'c'
 
-      #TODO: The following assumes you are using the riscv-gcc toolchain. If
-      #      not please change appropriately
       self.compile_cmd = self.compile_cmd+' -mabi='+('lp64 ' if 64 in ispec['supported_xlen'] else 'ilp32 ')
+
+      # Override default exception relocation list - remove EBREAK exception since NEORV32 clears MTVAL
+      # when encountering this type of exception (permitted by RISC-V priv. spec.)
+      print("<plugin-neorv32> overriding default SET_REL_TVAL_MSK macro (removing BREAKPOINT exception)")
+      neorv32_override = ' \"-DSET_REL_TVAL_MSK=(('
+      neorv32_override = neorv32_override+'(1<<CAUSE_MISALIGNED_FETCH) | '
+      neorv32_override = neorv32_override+'(1<<CAUSE_FETCH_ACCESS)     | '
+#     neorv32_override = neorv32_override+'(1<<CAUSE_BREAKPOINT)       | '
+      neorv32_override = neorv32_override+'(1<<CAUSE_MISALIGNED_LOAD)  | '
+      neorv32_override = neorv32_override+'(1<<CAUSE_LOAD_ACCESS)      | '
+      neorv32_override = neorv32_override+'(1<<CAUSE_MISALIGNED_STORE) | '
+      neorv32_override = neorv32_override+'(1<<CAUSE_STORE_ACCESS)     | '
+      neorv32_override = neorv32_override+'(1<<CAUSE_FETCH_PAGE_FAULT) | '
+      neorv32_override = neorv32_override+'(1<<CAUSE_LOAD_PAGE_FAULT)  | '
+      neorv32_override = neorv32_override+'(1<<CAUSE_STORE_PAGE_FAULT)   '
+      neorv32_override = neorv32_override+') & 0xFFFFFFFF)\" '
+      self.compile_cmd = self.compile_cmd+neorv32_override
 
 #The following template only uses shell commands to compile and run the tests.
 
