@@ -145,39 +145,38 @@ begin
   neorv32_top_inst: neorv32_top
   generic map (
     -- General --
-    CLOCK_FREQUENCY              => 100000000,
-    INT_BOOTLOADER_EN            => false,
+    CLOCK_FREQUENCY            => 100000000,
+    INT_BOOTLOADER_EN          => false,
     -- RISC-V CPU Extensions --
-    CPU_EXTENSION_RISCV_B        => RISCV_B,
-    CPU_EXTENSION_RISCV_C        => RISCV_C,
-    CPU_EXTENSION_RISCV_E        => RISCV_E,
-    CPU_EXTENSION_RISCV_M        => RISCV_M,
-    CPU_EXTENSION_RISCV_U        => true,
-    CPU_EXTENSION_RISCV_Zicntr   => true,
-    CPU_EXTENSION_RISCV_Zifencei => true,
+    CPU_EXTENSION_RISCV_B      => RISCV_B,
+    CPU_EXTENSION_RISCV_C      => RISCV_C,
+    CPU_EXTENSION_RISCV_E      => RISCV_E,
+    CPU_EXTENSION_RISCV_M      => RISCV_M,
+    CPU_EXTENSION_RISCV_U      => true,
+    CPU_EXTENSION_RISCV_Zicntr => true,
     -- Extension Options --
-    FAST_MUL_EN                  => true,
-    FAST_SHIFT_EN                => true,
+    FAST_MUL_EN                => true,
+    FAST_SHIFT_EN              => true,
     -- Internal Instruction memory --
-    MEM_INT_IMEM_EN              => false,
+    MEM_INT_IMEM_EN            => false,
     -- Internal Data memory --
-    MEM_INT_DMEM_EN              => false,
+    MEM_INT_DMEM_EN            => false,
     -- Internal Instruction Cache (iCACHE) --
-    ICACHE_EN                    => true,
-    ICACHE_NUM_BLOCKS            => 4,
-    ICACHE_BLOCK_SIZE            => 64,
-    ICACHE_ASSOCIATIVITY         => 2,
+    ICACHE_EN                  => true,
+    ICACHE_NUM_BLOCKS          => 4,
+    ICACHE_BLOCK_SIZE          => 64,
+    ICACHE_ASSOCIATIVITY       => 2,
     -- Internal Data Cache (dCACHE) --
-    DCACHE_EN                    => true,
-    DCACHE_NUM_BLOCKS            => 4,
-    DCACHE_BLOCK_SIZE            => 64,
+    DCACHE_EN                  => true,
+    DCACHE_NUM_BLOCKS          => 4,
+    DCACHE_BLOCK_SIZE          => 64,
     -- External memory interface --
-    MEM_EXT_EN                   => true,
-    MEM_EXT_TIMEOUT              => 8,
-    MEM_EXT_PIPE_MODE            => true,
-    MEM_EXT_BIG_ENDIAN           => false,
-    MEM_EXT_ASYNC_RX             => true,
-    MEM_EXT_ASYNC_TX             => true
+    MEM_EXT_EN                 => true,
+    MEM_EXT_TIMEOUT            => 8,
+    MEM_EXT_PIPE_MODE          => true,
+    MEM_EXT_BIG_ENDIAN         => false,
+    MEM_EXT_ASYNC_RX           => true,
+    MEM_EXT_ASYNC_TX           => true
   )
   port map (
     -- Global control --
