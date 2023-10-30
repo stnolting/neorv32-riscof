@@ -81,31 +81,31 @@ architecture neorv32_riscof_tb_rtl of neorv32_riscof_tb is
   constant mem_size_c : natural := cond_sel_natural_f(boolean(MEM_SIZE >= mem_size_max_c), mem_size_max_c, 2**index_size_f(MEM_SIZE));
 
   -- memory type --
-  type mem8_t is array (natural range <>) of bit_vector(7 downto 0);
+  type mem8_bv_t is array (natural range <>) of bit_vector(7 downto 0); -- bit_vector type for optimized system storage
 
-  -- initialize mem8_t array from ASCII HEX file  --
-  impure function mem8_init_f(file_name : string; num_bytes : natural; byte_sel : natural) return mem8_t is
+  -- initialize mem8_bv_t array from ASCII HEX file  --
+  impure function mem8_bv_init_f(file_name : string; num_bytes : natural; byte_sel : natural) return mem8_bv_t is
     file     text_file   : text open read_mode is file_name;
     variable text_line_v : line;
-    variable mem8_v      : mem8_t(0 to num_bytes-1);
+    variable mem8_bv_v   : mem8_bv_t(0 to num_bytes-1);
     variable index_v     : natural;
     variable word_v      : bit_vector(31 downto 0);
   begin
-    mem8_v  := (others => (others => '0')); -- initialize to all-zero
-    index_v := 0;
+    mem8_bv_v := (others => (others => '0')); -- initialize to all-zero
+    index_v   := 0;
     while (endfile(text_file) = false) and (index_v < num_bytes) loop
       readline(text_file, text_line_v);
       hread(text_line_v, word_v);
       case byte_sel is
-        when 0      => mem8_v(index_v) := word_v(07 downto 00);
-        when 1      => mem8_v(index_v) := word_v(15 downto 08);
-        when 2      => mem8_v(index_v) := word_v(23 downto 16);
-        when others => mem8_v(index_v) := word_v(31 downto 24);
+        when 0      => mem8_bv_v(index_v) := word_v(07 downto 00);
+        when 1      => mem8_bv_v(index_v) := word_v(15 downto 08);
+        when 2      => mem8_bv_v(index_v) := word_v(23 downto 16);
+        when others => mem8_bv_v(index_v) := word_v(31 downto 24);
       end case;
       index_v := index_v + 1;
     end loop;
-    return mem8_v;
-  end function mem8_init_f;
+    return mem8_bv_v;
+  end function mem8_bv_init_f;
 
   -- memory read/write address --
   signal addr : integer range 0 to (mem_size_c/4)-1;
@@ -203,25 +203,25 @@ begin
   -- External Main Memory [rwx] - Constructed from four parallel byte-wide memories ---------
   -- -------------------------------------------------------------------------------------------
   ext_mem_rw: process(clk_gen)
-    variable mem8_b0_v : mem8_t(0 to (mem_size_c/4)-1) := mem8_init_f(MEM_FILE, mem_size_c/4, 0); -- byte[0]
-    variable mem8_b1_v : mem8_t(0 to (mem_size_c/4)-1) := mem8_init_f(MEM_FILE, mem_size_c/4, 1); -- byte[1]
-    variable mem8_b2_v : mem8_t(0 to (mem_size_c/4)-1) := mem8_init_f(MEM_FILE, mem_size_c/4, 2); -- byte[2]
-    variable mem8_b3_v : mem8_t(0 to (mem_size_c/4)-1) := mem8_init_f(MEM_FILE, mem_size_c/4, 3); -- byte[3]
+    variable mem8_bv_b0_v : mem8_bv_t(0 to (mem_size_c/4)-1) := mem8_bv_init_f(MEM_FILE, mem_size_c/4, 0); -- byte[0]
+    variable mem8_bv_b1_v : mem8_bv_t(0 to (mem_size_c/4)-1) := mem8_bv_init_f(MEM_FILE, mem_size_c/4, 1); -- byte[1]
+    variable mem8_bv_b2_v : mem8_bv_t(0 to (mem_size_c/4)-1) := mem8_bv_init_f(MEM_FILE, mem_size_c/4, 2); -- byte[2]
+    variable mem8_bv_b3_v : mem8_bv_t(0 to (mem_size_c/4)-1) := mem8_bv_init_f(MEM_FILE, mem_size_c/4, 3); -- byte[3]
   begin
     if rising_edge(clk_gen) then
       wb_cpu.ack   <= wb_cpu.cyc and wb_cpu.stb;
       wb_cpu.rdata <= (others => '0');
       if (wb_cpu.cyc = '1') and (wb_cpu.stb = '1') then
         if (wb_cpu.we = '1') then -- byte-wide write access
-          if (wb_cpu.sel(0) = '1') then mem8_b0_v(addr) := to_bitvector(wb_cpu.wdata(07 downto 00)); end if;
-          if (wb_cpu.sel(1) = '1') then mem8_b1_v(addr) := to_bitvector(wb_cpu.wdata(15 downto 08)); end if;
-          if (wb_cpu.sel(2) = '1') then mem8_b2_v(addr) := to_bitvector(wb_cpu.wdata(23 downto 16)); end if;
-          if (wb_cpu.sel(3) = '1') then mem8_b3_v(addr) := to_bitvector(wb_cpu.wdata(31 downto 24)); end if;
+          if (wb_cpu.sel(0) = '1') then mem8_bv_b0_v(addr) := to_bitvector(wb_cpu.wdata(07 downto 00)); end if;
+          if (wb_cpu.sel(1) = '1') then mem8_bv_b1_v(addr) := to_bitvector(wb_cpu.wdata(15 downto 08)); end if;
+          if (wb_cpu.sel(2) = '1') then mem8_bv_b2_v(addr) := to_bitvector(wb_cpu.wdata(23 downto 16)); end if;
+          if (wb_cpu.sel(3) = '1') then mem8_bv_b3_v(addr) := to_bitvector(wb_cpu.wdata(31 downto 24)); end if;
         else -- word-aligned read access
-          wb_cpu.rdata(07 downto 00) <= to_stdulogicvector(mem8_b0_v(addr));
-          wb_cpu.rdata(15 downto 08) <= to_stdulogicvector(mem8_b1_v(addr));
-          wb_cpu.rdata(23 downto 16) <= to_stdulogicvector(mem8_b2_v(addr));
-          wb_cpu.rdata(31 downto 24) <= to_stdulogicvector(mem8_b3_v(addr));
+          wb_cpu.rdata(07 downto 00) <= to_stdulogicvector(mem8_bv_b0_v(addr));
+          wb_cpu.rdata(15 downto 08) <= to_stdulogicvector(mem8_bv_b1_v(addr));
+          wb_cpu.rdata(23 downto 16) <= to_stdulogicvector(mem8_bv_b2_v(addr));
+          wb_cpu.rdata(31 downto 24) <= to_stdulogicvector(mem8_bv_b3_v(addr));
         end if;
       end if;
     end if;
