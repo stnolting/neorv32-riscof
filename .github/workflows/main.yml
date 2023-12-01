@@ -27,7 +27,7 @@ jobs:
     - name: '📦 Install Sail RISC-V model'
       run: |
         mkdir $GITHUB_WORKSPACE/sail-riscv
-        tar -xzf $GITHUB_WORKSPACE/bin/sail-riscv.18.09.22.tar.gz -C $GITHUB_WORKSPACE/sail-riscv
+        tar -xzf $GITHUB_WORKSPACE/bin/sail-riscv_v0.17.1.tar.gz -C $GITHUB_WORKSPACE/sail-riscv
         echo $GITHUB_WORKSPACE/sail-riscv >> $GITHUB_PATH
 
     - name: '📦 Install RISCOF'
