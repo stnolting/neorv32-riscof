@@ -2,10 +2,9 @@
 -- # << neorv32-riscof - Testbench for running RISCOF >>                                           #
 -- # ********************************************************************************************* #
 -- # Minimal NEORV32 CPU testbench for running the RISCOF-based architecture test framework.       #
--- # The simulation mode of UART0 is used to dump processing data (test signatures) to a file.     #
 -- #                                                                                               #
--- # An external memory (2MB, RAM) is initialized by a plain ASCII HEX file that contains the      #
--- # executable and all relevant data. The IMEM is split into four memory modules of 512kB each    #
+-- # A processor-external memory is initialized by a plain ASCII HEX file that contains the        #
+-- # executable and all relevant data. The memory is split into four submodules of 512kB each      #
 -- # using variables of type bit_vector to minimize simulation memory footprint. These hacks are   #
 -- # required since GHDL has problems with handling very large objects:                            #
 -- # https://github.com/ghdl/ghdl/issues/1592                                                      #
@@ -64,10 +63,7 @@ entity neorv32_riscof_tb is
   generic (
     MEM_FILE : string;            -- memory initialization file
     MEM_SIZE : natural := 8*1024; -- total memory size in bytes
-    RISCV_B  : boolean := false;  -- bit-manipulation ISA extension
-    RISCV_C  : boolean := false;  -- compressed ISA extension
-    RISCV_E  : boolean := false;  -- embedded ISA extension
-    RISCV_M  : boolean := false   -- hardware mul/div ISA extension
+    RISCV_E  : boolean := false   -- embedded ISA extension
   );
 end neorv32_riscof_tb;
 
@@ -83,7 +79,7 @@ architecture neorv32_riscof_tb_rtl of neorv32_riscof_tb is
   -- memory type --
   type mem8_bv_t is array (natural range <>) of bit_vector(7 downto 0); -- bit_vector type for optimized system storage
 
-  -- initialize mem8_bv_t array from ASCII HEX file  --
+  -- initialize mem8_bv_t array from plain ASCII HEX file  --
   impure function mem8_bv_init_f(file_name : string; num_bytes : natural; byte_sel : natural) return mem8_bv_t is
     file     text_file   : text open read_mode is file_name;
     variable text_line_v : line;
@@ -107,12 +103,11 @@ architecture neorv32_riscof_tb_rtl of neorv32_riscof_tb is
     return mem8_bv_v;
   end function mem8_bv_init_f;
 
-  -- memory read/write address --
+  -- memory address --
   signal addr : integer range 0 to (mem_size_c/4)-1;
 
   -- generators/triggers --
-  signal clk_gen, rst_gen : std_ulogic := '0';
-  signal msi, mei, mti    : std_ulogic;
+  signal clk_gen, rst_gen, msi, mei, mti : std_ulogic := '0';
 
   -- wishbone bus --
   type wishbone_t is record
@@ -131,7 +126,7 @@ begin
 
   -- Debug Info -----------------------------------------------------------------------------
   -- -------------------------------------------------------------------------------------------
-  assert false report "TB: actual memory size = " & integer'image(mem_size_c) & " bytes" severity warning;
+  assert false report "TB: actual memory size = " & integer'image(mem_size_c) & " bytes" severity note;
 
 
   -- Clock/Reset Generator ------------------------------------------------------------------
@@ -148,28 +143,20 @@ begin
     CLOCK_FREQUENCY            => 100000000,
     INT_BOOTLOADER_EN          => false,
     -- RISC-V CPU Extensions --
-    CPU_EXTENSION_RISCV_B      => RISCV_B,
-    CPU_EXTENSION_RISCV_C      => RISCV_C,
+    CPU_EXTENSION_RISCV_B      => true,
+    CPU_EXTENSION_RISCV_C      => true,
     CPU_EXTENSION_RISCV_E      => RISCV_E,
-    CPU_EXTENSION_RISCV_M      => RISCV_M,
+    CPU_EXTENSION_RISCV_M      => true,
     CPU_EXTENSION_RISCV_U      => true,
     CPU_EXTENSION_RISCV_Zicntr => true,
-    -- Extension Options --
+    CPU_EXTENSION_RISCV_Zicond => true,
+    -- Tuning Options --
     FAST_MUL_EN                => true,
     FAST_SHIFT_EN              => true,
     -- Internal Instruction memory --
     MEM_INT_IMEM_EN            => false,
     -- Internal Data memory --
     MEM_INT_DMEM_EN            => false,
-    -- Internal Instruction Cache (iCACHE) --
-    ICACHE_EN                  => true,
-    ICACHE_NUM_BLOCKS          => 4,
-    ICACHE_BLOCK_SIZE          => 64,
-    ICACHE_ASSOCIATIVITY       => 2,
-    -- Internal Data Cache (dCACHE) --
-    DCACHE_EN                  => true,
-    DCACHE_NUM_BLOCKS          => 4,
-    DCACHE_BLOCK_SIZE          => 64,
     -- External memory interface --
     MEM_EXT_EN                 => true,
     MEM_EXT_TIMEOUT            => 8,
@@ -203,10 +190,10 @@ begin
   -- External Main Memory [rwx] - Constructed from four parallel byte-wide memories ---------
   -- -------------------------------------------------------------------------------------------
   ext_mem_rw: process(clk_gen)
-    variable mem8_bv_b0_v : mem8_bv_t(0 to (mem_size_c/4)-1) := mem8_bv_init_f(MEM_FILE, mem_size_c/4, 0); -- byte[0]
-    variable mem8_bv_b1_v : mem8_bv_t(0 to (mem_size_c/4)-1) := mem8_bv_init_f(MEM_FILE, mem_size_c/4, 1); -- byte[1]
-    variable mem8_bv_b2_v : mem8_bv_t(0 to (mem_size_c/4)-1) := mem8_bv_init_f(MEM_FILE, mem_size_c/4, 2); -- byte[2]
-    variable mem8_bv_b3_v : mem8_bv_t(0 to (mem_size_c/4)-1) := mem8_bv_init_f(MEM_FILE, mem_size_c/4, 3); -- byte[3]
+    variable mem8_bv_b0_v : mem8_bv_t(0 to (mem_size_c/4)-1) := mem8_bv_init_f(MEM_FILE, mem_size_c/4, 0);
+    variable mem8_bv_b1_v : mem8_bv_t(0 to (mem_size_c/4)-1) := mem8_bv_init_f(MEM_FILE, mem_size_c/4, 1);
+    variable mem8_bv_b2_v : mem8_bv_t(0 to (mem_size_c/4)-1) := mem8_bv_init_f(MEM_FILE, mem_size_c/4, 2);
+    variable mem8_bv_b3_v : mem8_bv_t(0 to (mem_size_c/4)-1) := mem8_bv_init_f(MEM_FILE, mem_size_c/4, 3);
   begin
     if rising_edge(clk_gen) then
       wb_cpu.ack   <= wb_cpu.cyc and wb_cpu.stb;
@@ -245,22 +232,22 @@ begin
           when x"CAFECAFE" => -- end simulation
             assert false report "Finishing simulation." severity note;
             finish;
-          when x"11111111" => -- set machine software interrupt (MSI)
+          when x"11111111" => -- set machine software interrupt
             assert false report "Set MSI." severity note;
             msi <= '1';
-          when x"22222222" => -- clear machine software interrupt (MSI)
+          when x"22222222" => -- clear machine software interrupt
             assert false report "Clear MSI." severity note;
             msi <= '0';
-          when x"33333333" => -- set machine external interrupt (MEI)
+          when x"33333333" => -- set machine external interrupt
             assert false report "Set MEI." severity note;
             mei <= '1';
-          when x"44444444" => -- clear machine external interrupt (MEI)
+          when x"44444444" => -- clear machine external interrupt
             assert false report "Clear MEI." severity note;
             mei <= '0';
-          when x"55555555" => -- set machine timer interrupt (MTI)
+          when x"55555555" => -- set machine timer interrupt
             assert false report "Set MTI." severity note;
             mti <= '1';
-          when x"66666666" => -- clear machine timer interrupt (MTI)
+          when x"66666666" => -- clear machine timer interrupt
             assert false report "Clear MTI." severity note;
             mti <= '0';
           when others =>
