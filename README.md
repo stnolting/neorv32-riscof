@@ -17,6 +17,7 @@ Currently, the following tests are supported:
 - [x] `rv32i_m\I` - base integer ISA
 - [x] `rv32i_m\M` - hardware integer multiplication and division
 - [x] `rv32i_m\privilege` - privileged machine-mode architecture
+- [x] `rv32i_m\Zicond` - conditional operations
 - [x] `rv32i_m\Zifencei` - instruction stream synchronization
 
 :bulb: The general structure of this repository was setup according to the
@@ -34,7 +35,8 @@ takes care of installing all the required packages.
 * [RISC-V GCC toolchain](https://github.com/stnolting/riscv-gcc-prebuilt) - for compiling native `rv32` code
 * [Sail RISC-V](https://github.com/riscv/sail-riscv) - the reference model (a pre-built binary can be found in
 the [`bin`](https://github.com/stnolting/neorv32-riscof/tree/main/bin) folder)
-* [RISCOF](https://github.com/riscv-software-src/riscof) - the architecture test framework
+* [RISCOF](https://github.com/riscv-software-src/riscof) - the architecture test framework (including
+[riscv-isac](https://github.com/riscv-software-src/riscv-isac) and [riscv-config](https://github.com/riscv-software-src/riscv-config))
 * [GHDL](https://github.com/ghdl/ghdl) - the _awesome_ VHDL simulator for simulating the DUT
 
 The framework (running all tests) is invoked via a single shell script

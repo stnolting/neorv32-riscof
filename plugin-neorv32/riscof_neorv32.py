@@ -17,9 +17,7 @@ logger = logging.getLogger()
 
 class neorv32(pluginTemplate):
     __model__ = "neorv32"
-
-    #TODO: please update the below to indicate family, version, etc of your DUT.
-    __version__ = "INITIAL"
+    __version__ = "latest"
 
     def __init__(self, *args, **kwargs):
         sclass = super().__init__(*args, **kwargs)
@@ -124,8 +122,6 @@ class neorv32(pluginTemplate):
       neorv32_override = neorv32_override+') & 0xFFFFFFFF)\" '
       self.compile_cmd = self.compile_cmd+neorv32_override
 
-#The following template only uses shell commands to compile and run the tests.
-
     def runTests(self, testList):
 
       # we will iterate over each entry in the testList. Each entry node will be referred to by the
@@ -171,8 +167,7 @@ class neorv32(pluginTemplate):
           # choice.
           utils.shellCommand(cmd).run(cwd=test_dir)
 
-
-          # NEORV32-specific hardware configuration (using lots of shell stuff)
+          # ---- NEORV32-specific ----
 
           # copy ELF to sim folder
           execute = 'cp -f {0}/{1} ./sim/{1}'.format(test_dir, elf)
@@ -188,18 +183,8 @@ class neorv32(pluginTemplate):
           execute = 'sh sim/ghdl_run.sh'
           # set memory size
           exe_stats = os.stat("sim/main.hex")
-#         print(exe_stats.st_size)
           execute += ' -gMEM_SIZE=' + str(exe_stats.st_size)
-          # set ISA extensions
-          if "rv32im" in marchstr:
-              execute += ' -gRISCV_M=true'
-          # 'privilege' tests also require C extension
-          if "rv32ic" in marchstr or "privilege" in test:
-              execute += ' -gRISCV_C=true'
-          if "rv32izba" in marchstr or "rv32izbb" in marchstr or "rv32izbc" in marchstr or "rv32izbs" in marchstr:
-              execute += ' -gRISCV_B=true'
           logger.debug('DUT executing ' + execute)
-#         print(execute)
           utils.shellCommand(execute).run()
 
           # debug output
@@ -209,7 +194,6 @@ class neorv32(pluginTemplate):
           execute = 'cp -f ./sim/DUT-neorv32.signature {0}/.'.format(test_dir)
           logger.debug('DUT executing ' + execute)
           utils.shellCommand(execute).run()
-
 
       # if target runs are not required then we simply exit as this point after running all
       # the makefile targets.
