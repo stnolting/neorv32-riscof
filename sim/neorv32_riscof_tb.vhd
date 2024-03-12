@@ -170,7 +170,6 @@ begin
     clk_i       => clk_gen,
     rstn_i      => rst_gen,
     -- Wishbone bus interface (available if MEM_EXT_EN = true) --
-    wb_tag_o    => open,
     wb_adr_o    => wb_cpu.addr,
     wb_dat_i    => wb_cpu.rdata,
     wb_dat_o    => wb_cpu.wdata,
