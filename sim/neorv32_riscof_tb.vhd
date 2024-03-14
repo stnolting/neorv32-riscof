@@ -170,7 +170,6 @@ begin
     clk_i       => clk_gen,
     rstn_i      => rst_gen,
     -- External bus interface (available if XBUS_EN = true) --
-    xbus_tag_o  => open,
     xbus_adr_o  => wb_cpu.addr,
     xbus_dat_i  => wb_cpu.rdata,
     xbus_dat_o  => wb_cpu.wdata,
