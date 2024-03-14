@@ -157,28 +157,29 @@ begin
     MEM_INT_IMEM_EN            => false,
     -- Internal Data memory --
     MEM_INT_DMEM_EN            => false,
-    -- External memory interface --
-    MEM_EXT_EN                 => true,
-    MEM_EXT_TIMEOUT            => 8,
-    MEM_EXT_PIPE_MODE          => true,
-    MEM_EXT_BIG_ENDIAN         => false,
-    MEM_EXT_ASYNC_RX           => true,
-    MEM_EXT_ASYNC_TX           => true
+    -- External bus interface --
+    XBUS_EN                    => true,
+    XBUS_TIMEOUT               => 8,
+    XBUS_PIPE_MODE             => true,
+    XBUS_BIG_ENDIAN            => false,
+    XBUS_ASYNC_RX              => true,
+    XBUS_ASYNC_TX              => true
   )
   port map (
     -- Global control --
     clk_i       => clk_gen,
     rstn_i      => rst_gen,
-    -- Wishbone bus interface (available if MEM_EXT_EN = true) --
-    wb_adr_o    => wb_cpu.addr,
-    wb_dat_i    => wb_cpu.rdata,
-    wb_dat_o    => wb_cpu.wdata,
-    wb_we_o     => wb_cpu.we,
-    wb_sel_o    => wb_cpu.sel,
-    wb_stb_o    => wb_cpu.stb,
-    wb_cyc_o    => wb_cpu.cyc,
-    wb_ack_i    => wb_cpu.ack,
-    wb_err_i    => '0',
+    -- External bus interface (available if XBUS_EN = true) --
+    xbus_tag_o  => open,
+    xbus_adr_o  => wb_cpu.addr,
+    xbus_dat_i  => wb_cpu.rdata,
+    xbus_dat_o  => wb_cpu.wdata,
+    xbus_we_o   => wb_cpu.we,
+    xbus_sel_o  => wb_cpu.sel,
+    xbus_stb_o  => wb_cpu.stb,
+    xbus_cyc_o  => wb_cpu.cyc,
+    xbus_ack_i  => wb_cpu.ack,
+    xbus_err_i  => '0',
     -- CPU Interrupts --
     mtime_irq_i => mti,
     msw_irq_i   => msi,
