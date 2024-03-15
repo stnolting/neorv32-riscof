@@ -161,7 +161,6 @@ begin
     XBUS_EN                    => true,
     XBUS_TIMEOUT               => 8,
     XBUS_PIPE_MODE             => true,
-    XBUS_BIG_ENDIAN            => false,
     XBUS_ASYNC_RX              => true,
     XBUS_ASYNC_TX              => true
   )
