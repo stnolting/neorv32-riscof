@@ -7,14 +7,14 @@ For more information see the official [sail-riscv](https://github.com/riscv/sail
 [RISCOF](https://github.com/riscv-software-src/riscof) GitHub repositories.
 
 Included simulator binaries:
-* `riscv_sim_RV32`, version 0.17.1
+* `riscv_sim_RV32`
 
 To run the simulator(s) on your system decompress the archive into a new
 folder (e.g. `opt/sail-riscv`; might require elevated privileges):
 
 ```bash
 sudo mkdir opt/sail-riscv
-sudo tar -xzf sail-riscv_v0.17.1.tar.gz -C opt/sail-riscv
+sudo tar -xzf sail-riscv.tar.gz -C opt/sail-riscv
 ```
 
 Add this folder to your system's `PATH` environment variable:
