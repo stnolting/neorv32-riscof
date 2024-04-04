@@ -12,7 +12,7 @@ This repository is a port of the "**RISCOF** RISC-V Architectural Test Framework
 user and privileged ISA specifications. **Sail RISC-V** is used as reference model.
 Currently, the following tests are supported:
 
-- [x] `rv32i_m\B` - bit-manipulation (`Zba` + `Zbb` + `Zbc` + `Zbs`)
+- [x] `rv32i_m\B` - bit-manipulation (`Zba` + `Zbb` + `Zbs`)
 - [x] `rv32i_m\C` - compressed instructions
 - [x] `rv32i_m\I` - base integer ISA
 - [x] `rv32i_m\M` - hardware integer multiplication and division
