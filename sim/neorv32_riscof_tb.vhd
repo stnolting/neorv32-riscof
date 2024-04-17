@@ -160,9 +160,7 @@ begin
     -- External bus interface --
     XBUS_EN                    => true,
     XBUS_TIMEOUT               => 8,
-    XBUS_PIPE_MODE             => true,
-    XBUS_ASYNC_RX              => true,
-    XBUS_ASYNC_TX              => true
+    XBUS_REGSTAGE_EN           => false
   )
   port map (
     -- Global control --
