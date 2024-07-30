@@ -17,6 +17,11 @@ jobs:
         fetch-depth: 0
         submodules: recursive
 
+    - name: '📦 Install Python'
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
     - name: '📦 Install RISC-V GCC'
       run: |
         wget -q https://github.com/stnolting/riscv-gcc-prebuilt/releases/download/rv32i-131023/riscv32-unknown-elf.gcc-13.2.0.tar.gz
@@ -38,6 +43,7 @@ jobs:
 
     - name: '🔍 Check tools'
       run: |
+        python -V
         riscv32-unknown-elf-gcc -v
         riscv_sim_RV32 -h
         riscof --version
