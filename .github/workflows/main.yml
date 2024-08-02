@@ -17,6 +17,11 @@ jobs:
         fetch-depth: 0
         submodules: recursive
 
+    - name: '📦 Install Python'
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
     - name: '📦 Install RISC-V GCC'
       run: |
         wget -q https://github.com/stnolting/riscv-gcc-prebuilt/releases/download/rv32i-131023/riscv32-unknown-elf.gcc-13.2.0.tar.gz
@@ -30,14 +35,16 @@ jobs:
         tar -xzf $GITHUB_WORKSPACE/bin/sail-riscv.tar.gz -C $GITHUB_WORKSPACE/sail-riscv
         echo $GITHUB_WORKSPACE/sail-riscv >> $GITHUB_PATH
 
+    # upstream riscof is broken: https://github.com/riscv-software-src/riscof/issues/122
     - name: '📦 Install RISCOF'
-      run: pip3 install git+https://github.com/riscv/riscof.git
+      run: pip3 install git+https://github.com/riscv/riscof.git@d38859f85fe407bcacddd2efcd355ada4683aee4
 
     - name: '📦 Install GHDL'
       uses: ghdl/setup-ghdl-ci@nightly
 
     - name: '🔍 Check tools'
       run: |
+        python -V
         riscv32-unknown-elf-gcc -v
         riscv_sim_RV32 -h
         riscof --version
