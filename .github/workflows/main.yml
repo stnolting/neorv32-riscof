@@ -36,7 +36,8 @@ jobs:
         echo $GITHUB_WORKSPACE/sail-riscv >> $GITHUB_PATH
 
     - name: '📦 Install RISCOF'
-      run: pip3 install git+https://github.com/riscv/riscof.git
+      : # upstream riscof is broken: https://github.com/riscv-software-src/riscof/issues/122
+      run: pip3 install git+https://github.com/riscv/riscof.git@d38859f85fe407bcacddd2efcd355ada4683aee4
 
     - name: '📦 Install GHDL'
       uses: ghdl/setup-ghdl-ci@nightly
