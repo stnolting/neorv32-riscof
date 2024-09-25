@@ -15,6 +15,7 @@ Currently, the following tests are supported:
 - [x] `rv32i_m\B` - bit-manipulation (`Zba` + `Zbb` + `Zbs`)
 - [x] `rv32i_m\C` - compressed instructions
 - [x] `rv32i_m\I` - base integer ISA
+- [x] `rv32i_m\K` - scalar cryptography (`Zbkx` + `Zknd` + `Zkne` + `Zknh`)
 - [x] `rv32i_m\M` - hardware integer multiplication and division
 - [x] `rv32i_m\privilege` - privileged machine-mode architecture
 - [x] `rv32i_m\Zicond` - conditional operations
@@ -45,8 +46,6 @@ The framework (running all tests) is invoked via a single shell script
 successfully or 1 if there were any errors. The exit code of this script is used to determine the overall success
 of the GitHub Actions workflow.
 
-[[back to top](#neorv32-core-verification-using-riscof)]
-
 
 ## Setup Configuration
 
@@ -75,8 +74,6 @@ the DUT. The final test report is made available as CSS-flavored HTML file via t
 > Prebuilt _sail-riscv_ binaries for 64-bit x86 Linux are available in the
 [`bin`](https://github.com/stnolting/neorv32-riscof/tree/main/bin) folder.
 
-[[back to top](#neorv32-core-verification-using-riscof)]
-
 
 ## Device-Under-Test (DUT)
 
@@ -103,9 +100,7 @@ a DUT-specific Python script in the DUT's plugin folder
 (-> [`plugin-neorv32/riscof_neorv32.py`](https://github.com/stnolting/neorv32-riscof/blob/main/plugin-neorv32/riscof_neorv32.py)).
 This Python script makes extensive use of shell commands to move and execute files and scripts.
 
-> [!WARNING]
+> [!IMPORTANT]
 > The Python scripts of **both plugins** override the default `SET_REL_TVAL_MSK` macro from
 `riscv-arch-test/riscv-test-suite/env/arch_test.h` to remove the BREAK exception cause from the relocation list as the
 NEORV32 sets `mtval` to zero for this type of exception. This is **explicitly permitted** by the RISC-V priv. spec.
-
-[[back to top](#neorv32-core-verification-using-riscof)]
