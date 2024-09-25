@@ -148,8 +148,12 @@ begin
     CPU_EXTENSION_RISCV_E      => RISCV_E,
     CPU_EXTENSION_RISCV_M      => true,
     CPU_EXTENSION_RISCV_U      => true,
+    CPU_EXTENSION_RISCV_Zbkx   => true,
     CPU_EXTENSION_RISCV_Zicntr => true,
     CPU_EXTENSION_RISCV_Zicond => true,
+    CPU_EXTENSION_RISCV_Zknd   => true,
+    CPU_EXTENSION_RISCV_Zkne   => true,
+    CPU_EXTENSION_RISCV_Zknh   => true,
     -- Tuning Options --
     FAST_MUL_EN                => true,
     FAST_SHIFT_EN              => true,
