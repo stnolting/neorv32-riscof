@@ -140,31 +140,34 @@ begin
   neorv32_top_inst: neorv32_top
   generic map (
     -- General --
-    CLOCK_FREQUENCY            => 100000000,
-    INT_BOOTLOADER_EN          => false,
+    CLOCK_FREQUENCY  => 100_000_000,
     -- RISC-V CPU Extensions --
-    CPU_EXTENSION_RISCV_B      => true,
-    CPU_EXTENSION_RISCV_C      => true,
-    CPU_EXTENSION_RISCV_E      => RISCV_E,
-    CPU_EXTENSION_RISCV_M      => true,
-    CPU_EXTENSION_RISCV_U      => true,
-    CPU_EXTENSION_RISCV_Zbkx   => true,
-    CPU_EXTENSION_RISCV_Zicntr => true,
-    CPU_EXTENSION_RISCV_Zicond => true,
-    CPU_EXTENSION_RISCV_Zknd   => true,
-    CPU_EXTENSION_RISCV_Zkne   => true,
-    CPU_EXTENSION_RISCV_Zknh   => true,
+    RISCV_ISA_B      => true,
+    RISCV_ISA_C      => true,
+    RISCV_ISA_E      => RISCV_E,
+    RISCV_ISA_M      => true,
+    RISCV_ISA_U      => true,
+    RISCV_ISA_Zbkb   => true,
+    RISCV_ISA_Zbkc   => true,
+    RISCV_ISA_Zbkx   => true,
+    RISCV_ISA_Zicntr => true,
+    RISCV_ISA_Zicond => true,
+    RISCV_ISA_Zknd   => true,
+    RISCV_ISA_Zkne   => true,
+    RISCV_ISA_Zknh   => true,
+    RISCV_ISA_Zksed  => true,
+    RISCV_ISA_Zksh   => true,
     -- Tuning Options --
-    FAST_MUL_EN                => true,
-    FAST_SHIFT_EN              => true,
+    FAST_MUL_EN      => true,
+    FAST_SHIFT_EN    => true,
     -- Internal Instruction memory --
-    MEM_INT_IMEM_EN            => false,
+    MEM_INT_IMEM_EN  => false,
     -- Internal Data memory --
-    MEM_INT_DMEM_EN            => false,
+    MEM_INT_DMEM_EN  => false,
     -- External bus interface --
-    XBUS_EN                    => true,
-    XBUS_TIMEOUT               => 8,
-    XBUS_REGSTAGE_EN           => false
+    XBUS_EN          => true,
+    XBUS_TIMEOUT     => 8,
+    XBUS_REGSTAGE_EN => false
   )
   port map (
     -- Global control --
