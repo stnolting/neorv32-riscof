@@ -142,14 +142,16 @@ begin
     -- General --
     CLOCK_FREQUENCY  => 100_000_000,
     -- RISC-V CPU Extensions --
-    RISCV_ISA_B      => true,
     RISCV_ISA_C      => true,
     RISCV_ISA_E      => RISCV_E,
     RISCV_ISA_M      => true,
     RISCV_ISA_U      => true,
+    RISCV_ISA_Zba    => true,
+    RISCV_ISA_Zbb    => true,
     RISCV_ISA_Zbkb   => true,
     RISCV_ISA_Zbkc   => true,
     RISCV_ISA_Zbkx   => true,
+    RISCV_ISA_Zbs    => true,
     RISCV_ISA_Zicntr => true,
     RISCV_ISA_Zicond => true,
     RISCV_ISA_Zknd   => true,
