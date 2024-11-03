@@ -122,6 +122,9 @@ architecture neorv32_riscof_tb_rtl of neorv32_riscof_tb is
   end record;
   signal wb_cpu : wishbone_t;
 
+  signal xmem_rdata, xirq_rdata, dump_rdata : std_ulogic_vector(31 downto 0);
+  signal xmem_ack,   xirq_ack,   dump_ack   : std_ulogic;
+
 begin
 
   -- Debug Info -----------------------------------------------------------------------------
@@ -139,8 +142,11 @@ begin
   -- -------------------------------------------------------------------------------------------
   neorv32_top_inst: neorv32_top
   generic map (
-    -- General --
+    -- Processor Clocking --
     CLOCK_FREQUENCY  => 100_000_000,
+    -- Boot Configuration --
+    BOOT_MODE_SELECT => 1, -- boot from BOOT_ADDR_CUSTOM
+    BOOT_ADDR_CUSTOM => x"00000000",
     -- RISC-V CPU Extensions --
     RISCV_ISA_C      => true,
     RISCV_ISA_E      => RISCV_E,
@@ -191,6 +197,10 @@ begin
     mext_irq_i  => mei
   );
 
+  -- bus feedback --
+  wb_cpu.rdata <= xmem_rdata or xirq_rdata or dump_rdata;
+  wb_cpu.ack   <= xmem_ack   or xirq_ack   or dump_ack;
+
 
   -- External Main Memory [rwx] - Constructed from four parallel byte-wide memories ---------
   -- -------------------------------------------------------------------------------------------
@@ -201,19 +211,22 @@ begin
     variable mem8_bv_b3_v : mem8_bv_t(0 to (mem_size_c/4)-1) := mem8_bv_init_f(MEM_FILE, mem_size_c/4, 3);
   begin
     if rising_edge(clk_gen) then
-      wb_cpu.ack   <= wb_cpu.cyc and wb_cpu.stb;
-      wb_cpu.rdata <= (others => '0');
-      if (wb_cpu.cyc = '1') and (wb_cpu.stb = '1') then
+      -- defaults --
+      xmem_rdata <= (others => '0');
+      xmem_ack   <= '0';
+      -- bus access --
+      if (wb_cpu.cyc = '1') and (wb_cpu.stb = '1') and (wb_cpu.addr(31 downto 28) = "0000") then
+        xmem_ack <= '1';
         if (wb_cpu.we = '1') then -- byte-wide write access
           if (wb_cpu.sel(0) = '1') then mem8_bv_b0_v(addr) := to_bitvector(wb_cpu.wdata(07 downto 00)); end if;
           if (wb_cpu.sel(1) = '1') then mem8_bv_b1_v(addr) := to_bitvector(wb_cpu.wdata(15 downto 08)); end if;
           if (wb_cpu.sel(2) = '1') then mem8_bv_b2_v(addr) := to_bitvector(wb_cpu.wdata(23 downto 16)); end if;
           if (wb_cpu.sel(3) = '1') then mem8_bv_b3_v(addr) := to_bitvector(wb_cpu.wdata(31 downto 24)); end if;
         else -- word-aligned read access
-          wb_cpu.rdata(07 downto 00) <= to_stdulogicvector(mem8_bv_b0_v(addr));
-          wb_cpu.rdata(15 downto 08) <= to_stdulogicvector(mem8_bv_b1_v(addr));
-          wb_cpu.rdata(23 downto 16) <= to_stdulogicvector(mem8_bv_b2_v(addr));
-          wb_cpu.rdata(31 downto 24) <= to_stdulogicvector(mem8_bv_b3_v(addr));
+          xmem_rdata(07 downto 00) <= to_stdulogicvector(mem8_bv_b0_v(addr));
+          xmem_rdata(15 downto 08) <= to_stdulogicvector(mem8_bv_b1_v(addr));
+          xmem_rdata(23 downto 16) <= to_stdulogicvector(mem8_bv_b2_v(addr));
+          xmem_rdata(31 downto 24) <= to_stdulogicvector(mem8_bv_b3_v(addr));
         end if;
       end if;
     end if;
@@ -232,7 +245,12 @@ begin
       mei <= '0';
       mti <= '0';
     elsif rising_edge(clk_gen) then
+      -- defaults --
+      xirq_rdata <= (others => '0');
+      xirq_ack   <= '0';
+      -- bus access --
       if (wb_cpu.cyc = '1') and (wb_cpu.stb = '1') and (wb_cpu.we = '1') and (wb_cpu.addr = x"F0000000") then
+        xirq_ack <= '1';
         case wb_cpu.wdata is
           when x"CAFECAFE" => -- end simulation
             assert false report "Finishing simulation." severity note;
@@ -270,7 +288,12 @@ begin
     variable line_v    : line;
   begin
     if rising_edge(clk_gen) then
+      -- defaults --
+      dump_rdata <= (others => '0');
+      dump_ack   <= '0';
+      -- bus access --
       if (wb_cpu.cyc = '1') and (wb_cpu.stb = '1') and (wb_cpu.we = '1') and (wb_cpu.addr = x"F0000004") then
+        dump_ack <= '1';
         for i in 7 downto 0 loop -- write 32-bit as 8x lowercase HEX chars
           write(line_v, to_hexchar_f(wb_cpu.wdata(3+i*4 downto 0+i*4)));
         end loop;
