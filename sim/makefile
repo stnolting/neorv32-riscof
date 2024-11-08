@@ -42,4 +42,4 @@ main.vhd: main.bin $(IMAGE_GEN)
 
 # Remove artifacts
 clean:
-	@rm -f *.o *.bin *.out *.hex *.asm *.signature *.cf
+	@rm -f *.o *.bin *.out *.hex *.asm *.signature
