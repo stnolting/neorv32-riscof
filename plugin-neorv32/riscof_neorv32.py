@@ -190,7 +190,7 @@ class neorv32(pluginTemplate):
           utils.shellCommand(execute).run()
 
           # debug output
-          print(f"{test=}")
+          print(f"{test=} (size {str(exe_stats.st_size)} bytes)")
 
           # copy resulting signature file
           execute = 'cp -f ./sim/DUT-neorv32.signature {0}/.'.format(test_dir)
