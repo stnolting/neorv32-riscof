@@ -8,6 +8,8 @@ NEORV32_EXG_PATH = ../neorv32/sw/image_gen
 # RISC-V GCC
 RISCV_PREFIX ?= riscv32-unknown-elf-
 OBJCOPY = $(RISCV_PREFIX)objcopy
+OBJDUMP = $(RISCV_PREFIX)objdump
+READELF = $(RISCV_PREFIX)readelf
 
 # Host native compiler
 CC_X86 = gcc -Wall -O -g
@@ -24,11 +26,20 @@ $(IMAGE_GEN): $(NEORV32_EXG_PATH)/image_gen.c
 main.bin: $(current_dir)/main.elf
 	@$(OBJCOPY) -I elf32-little $< -j .text -O binary $@
 
-# Generate NEORV32 RAW executable image in plain hex format
+# Generate RAW executable image in plain hex format
 main.hex: main.bin $(IMAGE_GEN)
 	@set -e
 	@$(IMAGE_GEN) -raw_hex $< $@ $(shell basename $(CURDIR))
 
+# Generate assembly file (for debugging)
+main.asm: $(current_dir)/main.elf
+	@$(OBJDUMP) -d -S --section=.text $< > $@
+
+# Generate NEORV32 executable VHDL boot image
+main.vhd: main.bin $(IMAGE_GEN)
+	@set -e
+	@$(IMAGE_GEN) -app_vhd $< $@ $(shell basename $(CURDIR))
+
 # Remove artifacts
 clean:
-	@rm -f *.o *.bin *.out *.hex *.signature
+	@rm -f *.o *.bin *.out *.hex *.asm *.signature *.cf
