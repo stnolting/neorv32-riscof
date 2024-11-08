@@ -92,17 +92,6 @@ class neorv32(pluginTemplate):
       # capture the XLEN value by picking the max value in 'supported_xlen' field of isa yaml. This
       # will be useful in setting integer value in the compiler string (if not already hardcoded);
       self.xlen = ('64' if 64 in ispec['supported_xlen'] else '32')
-
-      # for spike start building the '--isa' argument. the self.isa is dutnmae specific and may not be
-      # useful for all DUTs
-      self.isa = 'rv' + self.xlen
-      if "I" in ispec["ISA"]:
-          self.isa += 'i'
-      if "M" in ispec["ISA"]:
-          self.isa += 'm'
-      if "C" in ispec["ISA"]:
-          self.isa += 'c'
-
       self.compile_cmd = self.compile_cmd+' -mabi='+('lp64 ' if 64 in ispec['supported_xlen'] else 'ilp32 ')
 
       # ---- NEORV32-specific ----
@@ -186,11 +175,12 @@ class neorv32(pluginTemplate):
           # set memory size
           exe_stats = os.stat("sim/main.hex")
           execute += ' -gMEM_SIZE=' + str(exe_stats.st_size)
+          # execute
           logger.debug('DUT executing ' + execute)
           utils.shellCommand(execute).run()
 
           # debug output
-          print(f"{test=} (size {str(exe_stats.st_size)} bytes)")
+          print(f"{test=} ({str(exe_stats.st_size)} bytes)")
 
           # copy resulting signature file
           execute = 'cp -f ./sim/DUT-neorv32.signature {0}/.'.format(test_dir)
