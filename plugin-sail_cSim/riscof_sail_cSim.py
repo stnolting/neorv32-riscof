@@ -29,7 +29,7 @@ class sail_cSim(pluginTemplate):
         self.num_jobs = str(config['jobs'] if 'jobs' in config else 1)
         self.pluginpath = os.path.abspath(config['pluginpath'])
         self.sail_exe = { '32' : os.path.join(config['PATH'] if 'PATH' in config else "","riscv_sim_RV32"),
-                '64' : os.path.join(config['PATH'] if 'PATH' in config else "","riscv_sim_RV64")}
+                          '64' : os.path.join(config['PATH'] if 'PATH' in config else "","riscv_sim_RV64")}
         self.isa_spec = os.path.abspath(config['ispec']) if 'ispec' in config else ''
         self.platform_spec = os.path.abspath(config['pspec']) if 'ispec' in config else ''
         self.make = config['make'] if 'make' in config else 'make'
@@ -41,8 +41,8 @@ class sail_cSim(pluginTemplate):
     def initialise(self, suite, work_dir, archtest_env):
         self.suite = suite
         self.work_dir = work_dir
-        self.objdump_cmd = 'riscv{1}-unknown-elf-objdump -D {0} > {2};'
-        self.compile_cmd = 'riscv{1}-unknown-elf-gcc -march={0} \
+        self.objdump_cmd = 'riscv-none-elf-objdump -D {0} > {2};'
+        self.compile_cmd = 'riscv-none-elf-gcc -march={0} \
          -static -mcmodel=medany -fvisibility=hidden -nostdlib -nostartfiles\
          -T '+self.pluginpath+'/env/link.ld\
          -I '+self.pluginpath+'/env/\
@@ -63,11 +63,11 @@ class sail_cSim(pluginTemplate):
             self.isa += 'f'
         if "D" in ispec["ISA"]:
             self.isa += 'd'
-        objdump = "riscv{0}-unknown-elf-objdump".format(self.xlen)
+        objdump = "riscv-none-elf-objdump".format(self.xlen)
         if shutil.which(objdump) is None:
             logger.error(objdump+": executable not found. Please check environment setup.")
             raise SystemExit(1)
-        compiler = "riscv{0}-unknown-elf-gcc".format(self.xlen)
+        compiler = "riscv-none-elf-gcc".format(self.xlen)
         if shutil.which(compiler) is None:
             logger.error(compiler+": executable not found. Please check environment setup.")
             raise SystemExit(1)
