@@ -61,20 +61,16 @@ use neorv32.neorv32_package.all;
 
 entity neorv32_riscof_tb is
   generic (
-    MEM_FILE : string;            -- memory initialization file
-    MEM_SIZE : natural := 8*1024; -- total memory size in bytes
-    RISCV_E  : boolean := false   -- embedded ISA extension
+    MEM_FILE : string;           -- memory initialization file
+    MEM_SIZE : natural := 8*1024 -- total memory size in bytes
   );
 end neorv32_riscof_tb;
 
 architecture neorv32_riscof_tb_rtl of neorv32_riscof_tb is
 
   -- maximum memory size in bytes --
-  -- [NOTE] sizes >= 4MB are crashing GHDL in this setup; maximum still-OK-size = 3MB
-  constant mem_size_max_c : natural := 2*1024*1024; -- just use 2MB as maximum to be safe ;)
-
-  -- make sure actual memory size is a power of two (or <mem_size_max_c> for the rare case or very large images) --
-  constant mem_size_c : natural := cond_sel_natural_f(boolean(MEM_SIZE >= mem_size_max_c), mem_size_max_c, 2**index_size_f(MEM_SIZE));
+  constant mem_size_max_c : natural := 4*1024*1024;
+  constant mem_size_c : natural := cond_sel_natural_f(boolean(MEM_SIZE >= mem_size_max_c), mem_size_max_c, MEM_SIZE);
 
   -- memory type --
   type mem8_bv_t is array (natural range <>) of bit_vector(7 downto 0); -- bit_vector type for optimized system storage
@@ -122,14 +118,14 @@ architecture neorv32_riscof_tb_rtl of neorv32_riscof_tb is
   end record;
   signal wb_cpu : wishbone_t;
 
-  signal xmem_rdata, xirq_rdata, dump_rdata : std_ulogic_vector(31 downto 0);
-  signal xmem_ack,   xirq_ack,   dump_ack   : std_ulogic;
+  signal xmem_rdata, trig_rdata, dump_rdata : std_ulogic_vector(31 downto 0);
+  signal xmem_ack,   trig_ack,   dump_ack   : std_ulogic;
 
 begin
 
   -- Debug Info -----------------------------------------------------------------------------
   -- -------------------------------------------------------------------------------------------
-  assert false report "TB: actual memory size = " & integer'image(mem_size_c) & " bytes" severity note;
+  assert false report "[RISCOF-TB] actual memory size = " & integer'image(mem_size_c) & " bytes" severity note;
 
 
   -- Clock/Reset Generator ------------------------------------------------------------------
@@ -149,7 +145,6 @@ begin
     BOOT_ADDR_CUSTOM => x"00000000",
     -- RISC-V CPU Extensions --
     RISCV_ISA_C      => true,
-    RISCV_ISA_E      => RISCV_E,
     RISCV_ISA_M      => true,
     RISCV_ISA_U      => true,
     RISCV_ISA_Zba    => true,
@@ -174,7 +169,7 @@ begin
     MEM_INT_DMEM_EN  => false,
     -- External bus interface --
     XBUS_EN          => true,
-    XBUS_TIMEOUT     => 8,
+    XBUS_TIMEOUT     => 7,
     XBUS_REGSTAGE_EN => false
   )
   port map (
@@ -198,8 +193,8 @@ begin
   );
 
   -- bus feedback --
-  wb_cpu.rdata <= xmem_rdata or xirq_rdata or dump_rdata;
-  wb_cpu.ack   <= xmem_ack   or xirq_ack   or dump_ack;
+  wb_cpu.rdata <= xmem_rdata or trig_rdata or dump_rdata;
+  wb_cpu.ack   <= xmem_ack   or trig_ack   or dump_ack;
 
 
   -- External Main Memory [rwx] - Constructed from four parallel byte-wide memories ---------
@@ -217,12 +212,12 @@ begin
       -- bus access --
       if (wb_cpu.cyc = '1') and (wb_cpu.stb = '1') and (wb_cpu.addr(31 downto 28) = "0000") then
         xmem_ack <= '1';
-        if (wb_cpu.we = '1') then -- byte-wide write access
+        if (wb_cpu.we = '1') then
           if (wb_cpu.sel(0) = '1') then mem8_bv_b0_v(addr) := to_bitvector(wb_cpu.wdata(07 downto 00)); end if;
           if (wb_cpu.sel(1) = '1') then mem8_bv_b1_v(addr) := to_bitvector(wb_cpu.wdata(15 downto 08)); end if;
           if (wb_cpu.sel(2) = '1') then mem8_bv_b2_v(addr) := to_bitvector(wb_cpu.wdata(23 downto 16)); end if;
           if (wb_cpu.sel(3) = '1') then mem8_bv_b3_v(addr) := to_bitvector(wb_cpu.wdata(31 downto 24)); end if;
-        else -- word-aligned read access
+        else
           xmem_rdata(07 downto 00) <= to_stdulogicvector(mem8_bv_b0_v(addr));
           xmem_rdata(15 downto 08) <= to_stdulogicvector(mem8_bv_b1_v(addr));
           xmem_rdata(23 downto 16) <= to_stdulogicvector(mem8_bv_b2_v(addr));
@@ -246,11 +241,11 @@ begin
       mti <= '0';
     elsif rising_edge(clk_gen) then
       -- defaults --
-      xirq_rdata <= (others => '0');
-      xirq_ack   <= '0';
+      trig_rdata <= (others => '0');
+      trig_ack   <= '0';
       -- bus access --
       if (wb_cpu.cyc = '1') and (wb_cpu.stb = '1') and (wb_cpu.we = '1') and (wb_cpu.addr = x"F0000000") then
-        xirq_ack <= '1';
+        trig_ack <= '1';
         case wb_cpu.wdata is
           when x"CAFECAFE" => -- end simulation
             assert false report "Finishing simulation." severity note;
