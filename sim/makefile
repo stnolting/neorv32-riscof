@@ -6,7 +6,7 @@ current_dir = $(shell pwd)
 NEORV32_EXG_PATH = ../neorv32/sw/image_gen
 
 # RISC-V GCC
-RISCV_PREFIX ?= riscv32-unknown-elf-
+RISCV_PREFIX ?= riscv-none-elf-
 OBJCOPY = $(RISCV_PREFIX)objcopy
 OBJDUMP = $(RISCV_PREFIX)objdump
 READELF = $(RISCV_PREFIX)readelf
