@@ -139,38 +139,38 @@ begin
   neorv32_top_inst: neorv32_top
   generic map (
     -- Processor Clocking --
-    CLOCK_FREQUENCY  => 100_000_000,
+    CLOCK_FREQUENCY   => 100_000_000,
     -- Boot Configuration --
-    BOOT_MODE_SELECT => 1, -- boot from BOOT_ADDR_CUSTOM
-    BOOT_ADDR_CUSTOM => x"00000000",
+    BOOT_MODE_SELECT  => 1, -- boot from BOOT_ADDR_CUSTOM
+    BOOT_ADDR_CUSTOM  => x"00000000",
     -- RISC-V CPU Extensions --
-    RISCV_ISA_C      => true,
-    RISCV_ISA_M      => true,
-    RISCV_ISA_U      => true,
-    RISCV_ISA_Zba    => true,
-    RISCV_ISA_Zbb    => true,
-    RISCV_ISA_Zbkb   => true,
-    RISCV_ISA_Zbkc   => true,
-    RISCV_ISA_Zbkx   => true,
-    RISCV_ISA_Zbs    => true,
-    RISCV_ISA_Zicntr => true,
-    RISCV_ISA_Zicond => true,
-    RISCV_ISA_Zknd   => true,
-    RISCV_ISA_Zkne   => true,
-    RISCV_ISA_Zknh   => true,
-    RISCV_ISA_Zksed  => true,
-    RISCV_ISA_Zksh   => true,
+    RISCV_ISA_C       => true,
+    RISCV_ISA_M       => true,
+    RISCV_ISA_U       => true,
+    RISCV_ISA_Zba     => true,
+    RISCV_ISA_Zbb     => true,
+    RISCV_ISA_Zbkb    => true,
+    RISCV_ISA_Zbkc    => true,
+    RISCV_ISA_Zbkx    => true,
+    RISCV_ISA_Zbs     => true,
+    RISCV_ISA_Zicntr  => true,
+    RISCV_ISA_Zicond  => true,
+    RISCV_ISA_Zknd    => true,
+    RISCV_ISA_Zkne    => true,
+    RISCV_ISA_Zknh    => true,
+    RISCV_ISA_Zksed   => true,
+    RISCV_ISA_Zksh    => true,
     -- Tuning Options --
-    FAST_MUL_EN      => true,
-    FAST_SHIFT_EN    => true,
+    CPU_FAST_MUL_EN   => true,
+    CPU_FAST_SHIFT_EN => true,
     -- Internal Instruction memory --
-    MEM_INT_IMEM_EN  => false,
+    MEM_INT_IMEM_EN   => false,
     -- Internal Data memory --
-    MEM_INT_DMEM_EN  => false,
+    MEM_INT_DMEM_EN   => false,
     -- External bus interface --
-    XBUS_EN          => true,
-    XBUS_TIMEOUT     => 7,
-    XBUS_REGSTAGE_EN => false
+    XBUS_EN           => true,
+    XBUS_TIMEOUT      => 7,
+    XBUS_REGSTAGE_EN  => false
   )
   port map (
     -- Global control --
