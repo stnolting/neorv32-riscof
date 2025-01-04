@@ -1,6 +1,6 @@
 hart_ids: [0]
 hart0:
-  ISA: RV32IMCUZicsr_Zicond_Zifencei_Zba_Zbb_Zbkb_Zbkc_Zbkx_Zbs_Zknd_Zkne_Zknh_Zksh_Zksed
+  ISA: RV32IMACUZicsr_Zicond_Zifencei_Zba_Zbb_Zbkb_Zbkc_Zbkx_Zbs_Zknd_Zkne_Zknh_Zksh_Zksed
   physical_addr_sz: 32
   User_Spec_Version: "2.3"
   Privilege_Spec_Version: "1.11"
@@ -8,7 +8,7 @@ hart0:
   pmp_granularity: 4
   supported_xlen: [32]
   misa:
-    reset-val: 0x40101104
+    reset-val: 0x40101105
     rv32:
       accessible: true
       mxl:
@@ -26,6 +26,6 @@ hart0:
             warl:
                dependency_fields: []
                legal:
-                 - extensions[25:0] in [0x0101104]
+                 - extensions[25:0] in [0x0101105]
                wr_illegal:
                  - unchanged
