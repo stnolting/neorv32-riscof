@@ -170,17 +170,13 @@ class neorv32(pluginTemplate):
           logger.debug('DUT executing ' + execute)
           utils.shellCommand(execute).run()
 
-          # prepare run of GHDL simulation
+          # execute GHDL simulation
           execute = 'sh sim/ghdl_run.sh'
-          # set memory size
-          exe_stats = os.stat("sim/main.hex")
-          execute += ' -gMEM_SIZE=' + str(exe_stats.st_size)
-          # execute
           logger.debug('DUT executing ' + execute)
           utils.shellCommand(execute).run()
 
-          # debug output
-          print(f"{test=} ({str(exe_stats.st_size)} bytes)")
+          # print current test
+          print(f"{test=}")
 
           # copy resulting signature file
           execute = 'cp -f ./sim/DUT-neorv32.signature {0}/.'.format(test_dir)

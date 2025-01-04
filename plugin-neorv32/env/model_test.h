@@ -65,47 +65,23 @@
 //RVTEST_IO_ASSERT_DFPR_EQ: unused
 #define RVMODEL_IO_ASSERT_DFPR_EQ(_D, _R, _I)
 
-// NEORV32: specify the routine for setting machine software interrupt
-#define RVMODEL_SET_MSW_INT      \
-    machine_irq_msi_set:         \
-      li a0, 0xF0000000;         \
-      li a1, 0x11111111;         \
-      sw a1, 0(a0);
+// routine for setting machine software interrupt: unused
+#define RVMODEL_SET_MSW_INT
 
-// NEORV32: specify the routine for clearing machine software interrupt
-#define RVMODEL_CLEAR_MSW_INT    \
-    machine_irq_msi_clr:         \
-      li a0, 0xF0000000;         \
-      li a1, 0x22222222;         \
-      sw a1, 0(a0);
+// routine for clearing machine software interrupt: unused
+#define RVMODEL_CLEAR_MSW_INT
 
-// NEORV32: specify the routine for setting machine external interrupt
-#define RVMODEL_SET_MEXT_INT     \
-    machine_irq_mei_set:         \
-      li a0, 0xF0000000;         \
-      li a1, 0x33333333;         \
-      sw a1, 0(a0);
+// routine for setting machine external interrupt: unused
+#define RVMODEL_SET_MEXT_INT
 
-// NEORV32: specify the routine for clearing machine external interrupt
-#define RVMODEL_CLEAR_MEXT_INT   \
-    machine_irq_mei_clr:         \
-      li a0, 0xF0000000;         \
-      li a1, 0x44444444;         \
-      sw a1, 0(a0);
+// routine for clearing machine external interrupt: unused
+#define RVMODEL_CLEAR_MEXT_INT
 
-// NEORV32: specify the routine for setting machine timer interrupt
-#define RVMODEL_SET_MTIMER_INT   \
-    machine_irq_mei_set:         \
-      li a0, 0xF0000000;         \
-      li a1, 0x55555555;         \
-      sw a1, 0(a0);
+// routine for setting machine timer interrupt: unused
+#define RVMODEL_SET_MTIMER_INT
 
-// NEORV32: specify the routine for clearing machine timer interrupt
-#define RVMODEL_CLEAR_MTIMER_INT \
-    machine_irq_mei_clr:         \
-      li a0, 0xF0000000;         \
-      li a1, 0x66666666;         \
-      sw a1, 0(a0);
+// routine for clearing machine timer interrupt: unused
+#define RVMODEL_CLEAR_MTIMER_INT
 
 
 #endif // _COMPLIANCE_MODEL_H
