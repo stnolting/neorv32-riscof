@@ -7,7 +7,7 @@ on:
 jobs:
 
   neorv32-verification:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
 
@@ -41,7 +41,11 @@ jobs:
         pip3 install git+https://github.com/riscv/riscof.git@d38859f85fe407bcacddd2efcd355ada4683aee4
 
     - name: '📦 Install GHDL'
-      uses: ghdl/setup-ghdl-ci@nightly
+      run: |
+        wget -q https://github.com/ghdl/ghdl/releases/download/v4.1.0/ghdl-gha-ubuntu-22.04-mcode.tgz
+        mkdir $GITHUB_WORKSPACE/ghdl
+        tar -xzf ghdl-gha-ubuntu-22.04-mcode.tgz -C $GITHUB_WORKSPACE/ghdl
+        echo $GITHUB_WORKSPACE/ghdl/bin >> $GITHUB_PATH
 
     - name: '🔍 Check tools'
       run: |
