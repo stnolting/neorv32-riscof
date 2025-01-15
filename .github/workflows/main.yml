@@ -41,11 +41,10 @@ jobs:
         pip3 install git+https://github.com/riscv/riscof.git@d38859f85fe407bcacddd2efcd355ada4683aee4
 
     - name: '📦 Install GHDL'
-      run: |
-        wget -q https://github.com/ghdl/ghdl/releases/download/v4.1.0/ghdl-gha-ubuntu-22.04-mcode.tgz
-        mkdir $GITHUB_WORKSPACE/ghdl
-        tar -xzf ghdl-gha-ubuntu-22.04-mcode.tgz -C $GITHUB_WORKSPACE/ghdl
-        echo $GITHUB_WORKSPACE/ghdl/bin >> $GITHUB_PATH
+      uses: ghdl/setup-ghdl@v1
+      with:
+        version: nightly
+        backend: mcode
 
     - name: '🔍 Check tools'
       run: |
