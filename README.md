@@ -18,9 +18,9 @@ Currently, the following tests are supported:
 - [x] `rv32i_m\I` - base integer ISA
 - [x] `rv32i_m\K` - scalar cryptography, `Zkn` and `Zks` (`Zbkb` + `Zbkc` + `Zbkx` + `Zknd` + `Zkne` + `Zknh` + `Zksed` + `Zksh`)
 - [x] `rv32i_m\M` - hardware integer multiplication and division
-- [x] `rv32i_m\privilege` - privileged machine-mode architecture
 - [x] `rv32i_m\Zicond` - conditional operations
 - [x] `rv32i_m\Zifencei` - instruction stream synchronization
+- [x] `rv32i_m\privilege` - privileged machine-mode architecture
 
 > [!TIP]
 > The general structure of this repository was setup according to the
@@ -41,6 +41,12 @@ the [`bin`](https://github.com/stnolting/neorv32-riscof/tree/main/bin) folder)
 * [RISCOF](https://github.com/riscv-software-src/riscof) - the architecture test framework (including
 [riscv-isac](https://github.com/riscv-software-src/riscv-isac) and [riscv-config](https://github.com/riscv-software-src/riscv-config))
 * [GHDL](https://github.com/ghdl/ghdl) - the _awesome_ VHDL simulator for simulating the DUT
+
+> [!IMPORTANT]
+> The `riscv-arch-test` submodule is pinned to a specific commit and ignored by _dependabot_. The source repository
+is under continuous development. Unfortunately, sometimes non-compatible modifications (i.e. test cases that forget
+to check for actually configured ISA extensions; see https://github.com/riscv-non-isa/riscv-arch-test/issues/552)
+sneak into the main branch.
 
 The framework (running all tests) is invoked via a single shell script
 [`run.sh`](https://github.com/stnolting/neorv32-riscof/blob/main/run.sh) that returns 0 if all tests were executed
