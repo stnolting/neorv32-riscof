@@ -35,7 +35,7 @@ takes care of installing all the required packages.
 
 * [neorv32](https://github.com/stnolting/neorv32) submodule - the device under test (DUT)
 * [riscv-arch-test](https://github.com/riscv-non-isa/riscv-arch-test) submodule - architecture test cases
-* [RISC-V GCC toolchain](https://github.com/stnolting/riscv-gcc-prebuilt) - for compiling native `rv32` code
+* [RISC-V GCC toolchain](https://github.com/xpack-dev-tools/riscv-none-elf-gcc-xpack) - for compiling native `rv32` code
 * [Sail RISC-V](https://github.com/riscv/sail-riscv) - the reference model (a pre-built binary can be found in
 the [`bin`](https://github.com/stnolting/neorv32-riscof/tree/main/bin) folder)
 * [RISCOF](https://github.com/riscv-software-src/riscof) - the architecture test framework (including
