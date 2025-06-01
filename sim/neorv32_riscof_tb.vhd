@@ -125,8 +125,8 @@ begin
     CPU_FAST_MUL_EN   => true,
     CPU_FAST_SHIFT_EN => true,
     -- Internal memories --
-    MEM_INT_IMEM_EN   => false,
-    MEM_INT_DMEM_EN   => false,
+    IMEM_EN           => false,
+    DMEM_EN           => false,
     -- External bus interface --
     XBUS_EN           => true,
     XBUS_TIMEOUT      => 7,
