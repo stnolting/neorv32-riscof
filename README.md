@@ -14,7 +14,7 @@ Currently, the following tests are supported:
 
 - [x] `rv32i_m\A` - atomic memory operations (`Zaamo` only)
 - [x] `rv32i_m\B` - bit-manipulation (`Zba` + `Zbb` + `Zbs`)
-- [x] `rv32i_m\C` - compressed instructions
+- [x] `rv32i_m\C` - compressed instructions (`Zca`)
 - [x] `rv32i_m\I` - base integer ISA
 - [x] `rv32i_m\K` - scalar cryptography, `Zkn` and `Zks` (`Zbkb` + `Zbkc` + `Zbkx` + `Zknd` + `Zkne` + `Zknh` + `Zksed` + `Zksh`)
 - [x] `rv32i_m\M` - hardware integer multiplication and division
