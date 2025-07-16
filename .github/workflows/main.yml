@@ -29,11 +29,11 @@ jobs:
         tar -xzf xpack-riscv-none-elf-gcc-14.2.0-2-linux-x64.tar.gz -C $GITHUB_WORKSPACE/riscv-gcc
         echo $GITHUB_WORKSPACE/riscv-gcc/xpack-riscv-none-elf-gcc-14.2.0-2/bin >> $GITHUB_PATH
 
-    - name: '📦 Install Sail RISC-V model'
+    - name: '📦 Install Sail RISC-V reference model'
       run: |
         mkdir $GITHUB_WORKSPACE/sail-riscv
         wget -q https://github.com/riscv/sail-riscv/releases/download/0.7/sail_riscv-Linux-x86_64.tar.gz
-        tar -xzf $GITHUB_WORKSPACE/bin/sail_riscv-Linux-x86_64.tar.gz -C $GITHUB_WORKSPACE/sail-riscv
+        tar -xzf $GITHUB_WORKSPACE/sail_riscv-Linux-x86_64.tar.gz -C $GITHUB_WORKSPACE/sail-riscv
         ls -al $GITHUB_WORKSPACE/sail-riscv
         echo $GITHUB_WORKSPACE/sail-riscv >> $GITHUB_PATH
 
