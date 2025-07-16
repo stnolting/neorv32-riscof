@@ -35,7 +35,8 @@ jobs:
         wget -q https://github.com/riscv/sail-riscv/releases/download/0.7/sail_riscv-Linux-x86_64.tar.gz
         tar -xzf $GITHUB_WORKSPACE/sail_riscv-Linux-x86_64.tar.gz -C $GITHUB_WORKSPACE/sail-riscv
         ls -al $GITHUB_WORKSPACE/sail-riscv
-        echo $GITHUB_WORKSPACE/sail-riscv >> $GITHUB_PATH
+        ls -al $GITHUB_WORKSPACE/sail-riscv/sail_riscv-Linux-x86_64
+        echo $GITHUB_WORKSPACE/sail-riscv/sail_riscv-Linux-x86_64 >> $GITHUB_PATH
 
     - name: '📦 Install RISCOF'
       run: |
@@ -52,7 +53,7 @@ jobs:
       run: |
         python -V
         riscv-none-elf-gcc -v
-        riscv_sim_RV32 -h
+        riscv_sim_rv32d -h
         riscof --version
         ghdl -v
 
