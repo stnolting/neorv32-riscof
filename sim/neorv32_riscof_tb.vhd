@@ -108,6 +108,7 @@ begin
     RISCV_ISA_M       => true,
     RISCV_ISA_U       => true,
     RISCV_ISA_Zaamo   => true,
+    RISCV_ISA_Zcb     => true,
     RISCV_ISA_Zba     => true,
     RISCV_ISA_Zbb     => true,
     RISCV_ISA_Zbkb    => true,

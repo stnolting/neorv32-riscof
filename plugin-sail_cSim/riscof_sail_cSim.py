@@ -79,7 +79,6 @@ class sail_cSim(pluginTemplate):
             raise SystemExit(1)
 
         # ---- NEORV32-specific ----
-
         # Override default exception relocation list - remove EBREAK exception since NEORV32 clears MTVAL
         # when encountering this type of exception (permitted by RISC-V priv. spec.)
         print("<plugin-sail_cSim> overriding default SET_REL_TVAL_MSK macro (removing BREAKPOINT exception)")
@@ -96,7 +95,6 @@ class sail_cSim(pluginTemplate):
         neorv32_override += '(1<<CAUSE_STORE_PAGE_FAULT)   '
         neorv32_override += ') & 0xFFFFFFFF)\" '
         self.compile_cmd += neorv32_override
-
 
     def runTests(self, testList, cgf_file=None):
         if os.path.exists(self.work_dir+ "/Makefile." + self.name[:-1]):
@@ -120,8 +118,11 @@ class sail_cSim(pluginTemplate):
             execute += self.objdump_cmd.format(elf, self.xlen, 'ref.disass')
             sig_file = os.path.join(test_dir, self.name[:-1] + ".signature")
 
-            # also configure PMP (pmp-grain = 0 = G -> 4-bytes)
-            execute += self.sail_exe[self.xlen] + ' --pmp-count=16 --pmp-grain=0 --test-signature={0} {1} > {2}.log 2>&1;'.format(sig_file, elf, test_name)
+            # configure PMP (pmp-grain = 0 = G -> 4-bytes)
+            flags_pmp = "--pmp-count=16 --pmp-grain=0"
+            # enable further ISA extensions
+            flags_isa = "--enable-zcb --enable-bitmanip --enable-zfinx"
+            execute += self.sail_exe[self.xlen] + f" {flags_pmp} {flags_isa} --test-signature={sig_file} {elf} > {test_name}.log 2>&1;"
 
             cov_str = ' '
             for label in testentry['coverage_labels']:
@@ -136,7 +137,6 @@ class sail_cSim(pluginTemplate):
                         test_name, ' -c '.join(cgf_file), self.xlen, cov_str)
             else:
                 coverage_cmd = ''
-
 
             execute+=coverage_cmd
 
