@@ -130,7 +130,6 @@ begin
     DMEM_EN           => false,
     -- External bus interface --
     XBUS_EN           => true,
-    XBUS_TIMEOUT      => 7,
     XBUS_REGSTAGE_EN  => false
   )
   port map (
