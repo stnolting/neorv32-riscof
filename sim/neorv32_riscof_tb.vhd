@@ -1,13 +1,6 @@
 -- ================================================================================ --
 -- neorv32_riscof_tb.vhd - Testbench for running RISCOF                             --
 -- -------------------------------------------------------------------------------- --
--- A processor-external memory is initialized by a plain ASCII HEX file that        --
--- contains the executable and all relevant data. The memory is split into four     --
--- sub-modules using variables of type bit_vector to minimize the host's simulation --
--- RAM footprint. Test signature data is dumped to a file "DUT-neorv32.signature"   --
--- by writing to address 0xF0000004. The simulation is terminated by writing        --
--- 0xCAFECAFE to address 0xF0000000. Note that this testbench requires VHDL2008.    --
--- -------------------------------------------------------------------------------- --
 -- The NEORV32 RISC-V Processor - https://github.com/stnolting/neorv32              --
 -- Copyright (c) NEORV32 contributors.                                              --
 -- Copyright (c) 2020 - 2025 Stephan Nolting. All rights reserved.                  --
@@ -48,19 +41,21 @@ architecture neorv32_riscof_tb_rtl of neorv32_riscof_tb is
     variable index_v     : natural;
     variable word_v      : bit_vector(31 downto 0);
   begin
-    mem8_bv_v := (others => (others => '0')); -- initialize to all-zero
+    mem8_bv_v := (others => (others => '0'));
     index_v   := 0;
-    while (endfile(text_file) = false) and (index_v < num_words) loop
-      readline(text_file, text_line_v);
-      hread(text_line_v, word_v);
-      case byte_sel is
-        when 0      => mem8_bv_v(index_v) := word_v(07 downto 00);
-        when 1      => mem8_bv_v(index_v) := word_v(15 downto 08);
-        when 2      => mem8_bv_v(index_v) := word_v(23 downto 16);
-        when others => mem8_bv_v(index_v) := word_v(31 downto 24);
-      end case;
-      index_v := index_v + 1;
-    end loop;
+    if (file_name /= "") then
+      while (endfile(text_file) = false) and (index_v < num_words) loop
+        readline(text_file, text_line_v);
+        hread(text_line_v, word_v);
+        case byte_sel is
+          when 0      => mem8_bv_v(index_v) := word_v(07 downto 00);
+          when 1      => mem8_bv_v(index_v) := word_v(15 downto 08);
+          when 2      => mem8_bv_v(index_v) := word_v(23 downto 16);
+          when others => mem8_bv_v(index_v) := word_v(31 downto 24);
+        end case;
+        index_v := index_v + 1;
+      end loop;
+    end if;
     return mem8_bv_v;
   end function mem8_bv_init_f;
 
@@ -99,53 +94,67 @@ begin
   neorv32_top_inst: neorv32_top
   generic map (
     -- Processor Clocking --
-    CLOCK_FREQUENCY   => 100_000_000,
+    CLOCK_FREQUENCY     => 100_000_000,
     -- Boot Configuration --
     BOOT_MODE_SELECT  => 1, -- boot from BOOT_ADDR_CUSTOM
     BOOT_ADDR_CUSTOM  => x"00000000",
     -- RISC-V CPU Extensions --
-    RISCV_ISA_C       => true,
-    RISCV_ISA_M       => true,
-    RISCV_ISA_U       => true,
-    RISCV_ISA_Zaamo   => true,
-    RISCV_ISA_Zcb     => true,
-    RISCV_ISA_Zba     => true,
-    RISCV_ISA_Zbb     => true,
-    RISCV_ISA_Zbkb    => true,
-    RISCV_ISA_Zbkc    => true,
-    RISCV_ISA_Zbkx    => true,
-    RISCV_ISA_Zbs     => true,
-    RISCV_ISA_Zicntr  => true,
-    RISCV_ISA_Zicond  => true,
-    RISCV_ISA_Zknd    => true,
-    RISCV_ISA_Zkne    => true,
-    RISCV_ISA_Zknh    => true,
-    RISCV_ISA_Zksed   => true,
-    RISCV_ISA_Zksh    => true,
+    RISCV_ISA_C         => true,
+    RISCV_ISA_M         => true,
+    RISCV_ISA_U         => true,
+    RISCV_ISA_Zaamo     => true,
+    RISCV_ISA_Zcb       => true,
+    RISCV_ISA_Zba       => true,
+    RISCV_ISA_Zbb       => true,
+    RISCV_ISA_Zbkb      => true,
+    RISCV_ISA_Zbkc      => true,
+    RISCV_ISA_Zbkx      => true,
+    RISCV_ISA_Zbs       => true,
+    RISCV_ISA_Zicntr    => true,
+    RISCV_ISA_Zicond    => true,
+    RISCV_ISA_Zknd      => true,
+    RISCV_ISA_Zkne      => true,
+    RISCV_ISA_Zknh      => true,
+    RISCV_ISA_Zksed     => true,
+    RISCV_ISA_Zksh      => true,
     -- Tuning Options --
-    CPU_FAST_MUL_EN   => true,
-    CPU_FAST_SHIFT_EN => true,
+    CPU_FAST_MUL_EN     => true,
+    CPU_FAST_SHIFT_EN   => true,
+    -- Physical Memory Protection (PMP) --
+    PMP_NUM_REGIONS     => 16,
+    PMP_MIN_GRANULARITY => 4,
+    PMP_TOR_MODE_EN     => true,
+    PMP_NAP_MODE_EN     => true,
     -- Internal memories --
-    IMEM_EN           => false,
-    DMEM_EN           => false,
+    IMEM_EN             => false,
+    DMEM_EN             => false,
     -- External bus interface --
-    XBUS_EN           => true,
-    XBUS_REGSTAGE_EN  => false
+    XBUS_EN             => true,
+    XBUS_REGSTAGE_EN    => false,
+    -- Processor peripherals --
+    IO_CLINT_EN         => true,
+    IO_TRACER_EN        => true,
+    IO_TRACER_BUFFER    => 1,
+    IO_TRACER_SIMLOG_EN => true
   )
   port map (
     -- Global control --
-    clk_i      => clk_gen,
-    rstn_i     => rst_gen,
+    clk_i       => clk_gen,
+    rstn_i      => rst_gen,
     -- External bus interface (available if XBUS_EN = true) --
-    xbus_adr_o => xbus.addr,
-    xbus_dat_i => xbus.rdata,
-    xbus_dat_o => xbus.wdata,
-    xbus_we_o  => xbus.we,
-    xbus_sel_o => xbus.sel,
-    xbus_stb_o => xbus.stb,
-    xbus_cyc_o => xbus.cyc,
-    xbus_ack_i => xbus.ack,
-    xbus_err_i => '0'
+    xbus_adr_o  => xbus.addr,
+    xbus_dat_i  => xbus.rdata,
+    xbus_dat_o  => xbus.wdata,
+    xbus_we_o   => xbus.we,
+    xbus_sel_o  => xbus.sel,
+    xbus_stb_o  => xbus.stb,
+    xbus_cyc_o  => xbus.cyc,
+    xbus_ack_i  => xbus.ack,
+    xbus_err_i  => '0',
+    -- CPU Interrupts --
+    mtime_irq_i => '0',
+    msw_irq_i   => '0',
+    mext_irq_i  => '0'
   );
 
   -- bus feedback --
