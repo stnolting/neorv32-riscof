@@ -183,6 +183,11 @@ class neorv32(pluginTemplate):
           logger.debug('DUT executing ' + execute)
           utils.shellCommand(execute).run()
 
+          # copy tracer log
+          execute = 'cp -f ./sim/neorv32.tracer0.log {0}/.'.format(test_dir)
+          logger.debug('DUT executing ' + execute)
+          utils.shellCommand(execute).run()
+
       # if target runs are not required then we simply exit as this point after running all
       # the makefile targets.
       if not self.target_run:
