@@ -1,11 +1,9 @@
 */__*
-
 riscof_work
-
 *.bin
 *.elf
 *.hex
 *.out
 *.signature
-
+*.log
 *.cf
