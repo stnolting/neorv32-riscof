@@ -14,18 +14,18 @@ hart0:
       mxl:
         implemented: true
         type:
-            warl:
-               dependency_fields: []
-               legal:
-                 - mxl[1:0] in [0x1]
-               wr_illegal:
-                 - unchanged
+          warl:
+            dependency_fields: []
+            legal:
+              - mxl[1:0] in [0x1]
+            wr_illegal:
+              - unchanged
       extensions:
         implemented: true
         type:
-            warl:
-               dependency_fields: []
-               legal:
-                 - extensions[25:0] in [0x0101105]
-               wr_illegal:
-                 - unchanged
+          warl:
+            dependency_fields: []
+            legal:
+              - extensions[25:0] in [0x0101105]
+            wr_illegal:
+              - unchanged
