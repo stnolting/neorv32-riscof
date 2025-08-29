@@ -27,8 +27,9 @@ end neorv32_riscof_tb;
 
 architecture neorv32_riscof_tb_rtl of neorv32_riscof_tb is
 
-  -- total memory size in bytes --
-  constant mem_size_c : natural := 4*1024*1024;
+  -- memory configuration --
+  constant mem_size_c : natural := 4*1024*1024; -- bytes
+  constant mem_base_c : std_ulogic_vector(31 downto 0) := x"80000000";
 
   -- memory type --
   type mem8_bv_t is array (natural range <>) of bit_vector(7 downto 0); -- bit_vector type for optimized system storage
@@ -96,8 +97,8 @@ begin
     -- Processor Clocking --
     CLOCK_FREQUENCY     => 100_000_000,
     -- Boot Configuration --
-    BOOT_MODE_SELECT  => 1, -- boot from BOOT_ADDR_CUSTOM
-    BOOT_ADDR_CUSTOM  => x"00000000",
+    BOOT_MODE_SELECT    => 1, -- boot from BOOT_ADDR_CUSTOM
+    BOOT_ADDR_CUSTOM    => mem_base_c,
     -- RISC-V CPU Extensions --
     RISCV_ISA_C         => true,
     RISCV_ISA_M         => true,
@@ -175,7 +176,7 @@ begin
       xmem_rdata <= (others => '0');
       xmem_ack   <= '0';
       -- bus access --
-      if (xbus.cyc = '1') and (xbus.stb = '1') and (xbus.addr(31 downto 28) = "0000") then
+      if (xbus.cyc = '1') and (xbus.stb = '1') and (xbus.addr(31 downto 28) = mem_base_c(31 downto 28)) then
         xmem_ack <= '1';
         if (xbus.we = '1') then
           if (xbus.sel(0) = '1') then mem8_bv_b0_v(mem_addr) := to_bitvector(xbus.wdata(07 downto 00)); end if;
