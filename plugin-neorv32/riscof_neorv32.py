@@ -96,20 +96,13 @@ class neorv32(pluginTemplate):
 
       # ---- NEORV32-specific ----
 
-      # Override default exception relocation list - remove EBREAK exception since NEORV32 clears MTVAL
-      # when encountering this type of exception (permitted by RISC-V priv. spec.)
-      print("<plugin-neorv32> overriding default SET_REL_TVAL_MSK macro (removing BREAKPOINT exception)")
+      # Override default exception relocation list (traps for MTVAL being set zero)
+      print("<plugin-neorv32> overriding default SET_REL_TVAL_MSK macro")
       neorv32_override  = ' \"-DSET_REL_TVAL_MSK=(('
-      neorv32_override += '(1<<CAUSE_MISALIGNED_FETCH) | '
-      neorv32_override += '(1<<CAUSE_FETCH_ACCESS)     | '
-#     neorv32_override += '(1<<CAUSE_BREAKPOINT)       | '
       neorv32_override += '(1<<CAUSE_MISALIGNED_LOAD)  | '
       neorv32_override += '(1<<CAUSE_LOAD_ACCESS)      | '
       neorv32_override += '(1<<CAUSE_MISALIGNED_STORE) | '
-      neorv32_override += '(1<<CAUSE_STORE_ACCESS)     | '
-      neorv32_override += '(1<<CAUSE_FETCH_PAGE_FAULT) | '
-      neorv32_override += '(1<<CAUSE_LOAD_PAGE_FAULT)  | '
-      neorv32_override += '(1<<CAUSE_STORE_PAGE_FAULT)   '
+      neorv32_override += '(1<<CAUSE_STORE_ACCESS)       '
       neorv32_override += ') & 0xFFFFFFFF)\" '
       self.compile_cmd += neorv32_override
 
