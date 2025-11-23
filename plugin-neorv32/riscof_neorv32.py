@@ -95,8 +95,7 @@ class neorv32(pluginTemplate):
       self.compile_cmd = self.compile_cmd+' -mabi='+('lp64 ' if 64 in ispec['supported_xlen'] else 'ilp32 ')
 
       # ---- NEORV32-specific ----
-
-      # Override default exception relocation list (traps for MTVAL being set zero)
+      # Override default exception relocation list (traps for MTVAL being set to zero)
       print("<plugin-neorv32> overriding default SET_REL_TVAL_MSK macro")
       neorv32_override  = ' \"-DSET_REL_TVAL_MSK=(('
       neorv32_override += '(1<<CAUSE_MISALIGNED_LOAD)  | '
