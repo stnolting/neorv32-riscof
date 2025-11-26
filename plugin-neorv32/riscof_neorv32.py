@@ -96,7 +96,7 @@ class neorv32(pluginTemplate):
 
       # ---- NEORV32-specific ----
       # Override default exception relocation list (traps for MTVAL being set to zero)
-      print("<plugin-neorv32> overriding default SET_REL_TVAL_MSK macro")
+      print("<plugin-neorv32> yaml-overwrite: overriding default SET_REL_TVAL_MSK macro")
       neorv32_override  = ' \"-DSET_REL_TVAL_MSK=(('
       neorv32_override += '(1<<CAUSE_MISALIGNED_LOAD)  | '
       neorv32_override += '(1<<CAUSE_LOAD_ACCESS)      | '
