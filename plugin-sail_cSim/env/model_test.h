@@ -1,6 +1,8 @@
 #ifndef _COMPLIANCE_MODEL_H
 #define _COMPLIANCE_MODEL_H
 
+#define ALIGNMENT 2
+
 #define RVMODEL_DATA_SECTION \
         .pushsection .tohost,"aw",@progbits;              \
         .align 8; .global tohost; tohost: .dword 0;       \
@@ -29,6 +31,10 @@
     sw    x10, tohost, t5;     \
     j     boot_terminate;      \
   boot_end:
+
+// PMP configuration
+#define RVMODEL_NUM_PMPS 16
+#define RVMODEL_PMP_GRAIN 0
 
 //RV_COMPLIANCE_DATA_BEGIN
 #define RVMODEL_DATA_BEGIN \
