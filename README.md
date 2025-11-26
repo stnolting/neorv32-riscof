@@ -20,6 +20,7 @@ Currently, the following tests are supported:
 - [x] `rv32i_m\M` - hardware integer multiplication and division
 - [x] `rv32i_m\Zicond` - conditional operations
 - [x] `rv32i_m\Zifencei` - instruction stream synchronization
+- [x] `rv32i_m\Zimop` - may-be-operation
 - [x] `rv32i_m\hints` - hint instructions
 - [x] `rv32i_m\pmp` - physical memory protection (`M` + `U` modes)
 - [x] `rv32i_m\privilege` - privileged machine-mode architecture

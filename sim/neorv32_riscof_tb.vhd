@@ -113,6 +113,7 @@ begin
     RISCV_ISA_Zbs       => true,
     RISCV_ISA_Zicntr    => true,
     RISCV_ISA_Zicond    => true,
+    RISCV_ISA_Zimop     => true,
     RISCV_ISA_Zknd      => true,
     RISCV_ISA_Zkne      => true,
     RISCV_ISA_Zknh      => true,
