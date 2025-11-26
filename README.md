@@ -86,8 +86,7 @@ The [`sim`](https://github.com/stnolting/neorv32-riscof/tree/main/sim) folder pr
 and shell scripts to simulate the NEORV32 processor using **GHDL**. The testbench provides generics to configure the
 DUT's RISC-V ISA extensions and also to pass a plain ASCII HEX file, which represents the _memory image_ containing
 the actual executable. This file generated from the test-case-specific ELF file. The makefile in the `sim` folder
-takes care of compilation and will also convert the final memory image into a plain HEX file. Note that this makefile
-uses the default software framework from the NEORV32 submodule.
+takes care of compilation and will also convert the final memory image into a plain HEX file.
 
 The testbench implements a CPU-external memory module that get initialized with the actual memory image provided by the
 test framework. This memory is attached to the processor via its external Wishbone bus interface and is mapped to the core's
@@ -108,3 +107,8 @@ This Python script makes extensive use of shell commands to move and execute fil
 > The Python scripts of **both plugins** override the default `SET_REL_TVAL_MSK` macro from
 `riscv-arch-test/riscv-test-suite/env/arch_test.h` to remove the BREAK exception cause from the relocation list as the
 NEORV32 sets `mtval` to zero for this type of exception. This is **explicitly permitted** by the RISC-V priv. spec.
+
+> [!IMPORTANT]
+> The Python scripts of the **Sail plugin** performs some static configurations, as the corresponding features are not
+supported by the actually used version of `riscv_config`. These are deactivation of the _misgaligned accesses capability_
+and the _PMP layout_ configuration (16 regions with G = 0).
