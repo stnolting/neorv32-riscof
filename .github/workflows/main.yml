@@ -52,7 +52,7 @@ jobs:
       run: |
         python -V
         riscv-none-elf-gcc -v
-        riscv_sim_rv32d -h
+        sail_riscv_sim --version
         riscof --version
         ghdl -v
 
