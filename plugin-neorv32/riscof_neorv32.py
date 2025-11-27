@@ -15,6 +15,12 @@ from riscof.pluginTemplate import pluginTemplate
 
 logger = logging.getLogger()
 
+# Tool configuration
+HOSTGCC = "gcc -Wall -O -g"
+IMAGEGEN_PATH = "./neorv32/sw/image_gen"
+IMAGEGEN_EXE = "image_gen"
+RVOBJCOPY = "riscv-none-elf-objcopy"
+
 class neorv32(pluginTemplate):
     __model__ = "neorv32"
     __version__ = "latest"
@@ -35,6 +41,16 @@ class neorv32(pluginTemplate):
         # emulator, this variable could point to where the iss binary is located. If 'PATH variable
         # is missing in the config.ini we can hardcode the alternate here.
         self.dut_exe = os.path.join(config['PATH'] if 'PATH' in config else "","neorv32")
+
+        # compile NEORV32 image generator
+        execute = f"{HOSTGCC} {IMAGEGEN_PATH}/{IMAGEGEN_EXE}.c -o {IMAGEGEN_PATH}/{IMAGEGEN_EXE}"
+        logger.debug('DUT executing ' + execute)
+        utils.shellCommand(execute).run()
+
+        # prepare simulation (GHDL)
+        execute = f"sh ./sim/ghdl_setup.sh && rm -f *.log *.signature"
+        logger.debug('DUT executing ' + execute)
+        utils.shellCommand(execute).run()
 
         # Number of parallel jobs that can be spawned off by RISCOF
         # for various actions performed in later functions, specifically to run the tests in
@@ -79,11 +95,6 @@ class neorv32(pluginTemplate):
          -I '+self.pluginpath+'/env/\
          -I ' + archtest_env + ' {2} -o {3} {4}'
 
-       # prepare simulation (GHDL)
-       execute = 'sh ./sim/ghdl_setup.sh'
-       logger.debug('DUT executing ' + execute)
-       utils.shellCommand(execute).run()
-
     def build(self, isa_yaml, platform_yaml):
 
       # load the isa yaml as a dictionary in python.
@@ -94,10 +105,8 @@ class neorv32(pluginTemplate):
       self.xlen = ('64' if 64 in ispec['supported_xlen'] else '32')
       self.compile_cmd = self.compile_cmd+' -mabi='+('lp64 ' if 64 in ispec['supported_xlen'] else 'ilp32 ')
 
-      # ---- NEORV32-specific ----
-
-      # Override default exception relocation list (traps for MTVAL being set zero)
-      print("<plugin-neorv32> overriding default SET_REL_TVAL_MSK macro")
+      # Override default exception relocation list (traps for MTVAL being set to zero)
+      print("<plugin-neorv32> yaml-overwrite: overriding default SET_REL_TVAL_MSK macro")
       neorv32_override  = ' \"-DSET_REL_TVAL_MSK=(('
       neorv32_override += '(1<<CAUSE_MISALIGNED_LOAD)  | '
       neorv32_override += '(1<<CAUSE_LOAD_ACCESS)      | '
@@ -151,33 +160,25 @@ class neorv32(pluginTemplate):
           # choice.
           utils.shellCommand(cmd).run(cwd=test_dir)
 
-          # ---- NEORV32-specific ----
-
-          # copy ELF to sim folder
-          execute = 'cp -f {0}/{1} ./sim/{1}'.format(test_dir, elf)
-          logger.debug('DUT executing ' + execute)
-          utils.shellCommand(execute).run()
-
-          # convert to HEX memory initialization file
-          execute = 'make -C ./sim clean main.hex'
-          logger.debug('DUT executing ' + execute)
-          utils.shellCommand(execute).run()
-
-          # execute GHDL simulation
-          execute = 'sh sim/ghdl_run.sh'
+          # generate NEORV32 memory image
+          execute = f"{RVOBJCOPY} -I elf32-little {test_dir}/{elf} -j .text -O binary {test_dir}/main.bin"
+          execute += " && "
+          execute += f"{IMAGEGEN_PATH}/{IMAGEGEN_EXE} -t raw_hex -i {test_dir}/main.bin -o {test_dir}/main.hex"
           logger.debug('DUT executing ' + execute)
           utils.shellCommand(execute).run()
 
           # print current test
           print(f"{test=}")
 
-          # copy resulting signature file
-          execute = 'cp -f ./sim/DUT-neorv32.signature {0}/.'.format(test_dir)
+          # execute GHDL simulation
+          execute = f"sh sim/ghdl_run.sh -gMEM_FILE={test_dir}/main.hex"
           logger.debug('DUT executing ' + execute)
           utils.shellCommand(execute).run()
 
-          # copy tracer log
-          execute = 'cp -f ./sim/neorv32.tracer0.log {0}/.'.format(test_dir)
+          # copy resulting signature file and trace log
+          execute = f"cp -f ./sim/*.signature {test_dir}/."
+          execute += " && "
+          execute += f"cp -f ./sim/*.log {test_dir}/."
           logger.debug('DUT executing ' + execute)
           utils.shellCommand(execute).run()
 

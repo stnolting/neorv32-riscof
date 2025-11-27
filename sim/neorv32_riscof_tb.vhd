@@ -1,9 +1,8 @@
 -- ================================================================================ --
 -- neorv32_riscof_tb.vhd - Testbench for running RISCOF                             --
 -- -------------------------------------------------------------------------------- --
--- The NEORV32 RISC-V Processor - https://github.com/stnolting/neorv32              --
--- Copyright (c) NEORV32 contributors.                                              --
--- Copyright (c) 2020 - 2025 Stephan Nolting. All rights reserved.                  --
+-- https://github.com/stnolting/neorv32-riscof                                      --
+-- Copyright (c) 2022 - 2025 Stephan Nolting. All rights reserved.                  --
 -- Licensed under the BSD-3-Clause license, see LICENSE for details.                --
 -- SPDX-License-Identifier: BSD-3-Clause                                            --
 -- ================================================================================ --
@@ -79,8 +78,9 @@ architecture neorv32_riscof_tb_rtl of neorv32_riscof_tb is
   end record;
   signal xbus : xbus_t;
 
-  signal xmem_rdata, dump_rdata       : std_ulogic_vector(31 downto 0);
-  signal xmem_ack, dump_ack, trig_ack : std_ulogic;
+  signal mem_rdata : std_ulogic_vector(31 downto 0);
+  signal mem_ack, env_ack : std_ulogic;
+  signal msi, mei, mti : std_ulogic;
 
 begin
 
@@ -113,6 +113,7 @@ begin
     RISCV_ISA_Zbs       => true,
     RISCV_ISA_Zicntr    => true,
     RISCV_ISA_Zicond    => true,
+    RISCV_ISA_Zimop     => true,
     RISCV_ISA_Zknd      => true,
     RISCV_ISA_Zkne      => true,
     RISCV_ISA_Zknh      => true,
@@ -142,7 +143,7 @@ begin
     -- Global control --
     clk_i       => clk_gen,
     rstn_i      => rst_gen,
-    -- External bus interface (available if XBUS_EN = true) --
+    -- External bus interface --
     xbus_adr_o  => xbus.addr,
     xbus_dat_i  => xbus.rdata,
     xbus_dat_o  => xbus.wdata,
@@ -153,19 +154,19 @@ begin
     xbus_ack_i  => xbus.ack,
     xbus_err_i  => '0',
     -- CPU Interrupts --
-    mtime_irq_i => '0',
-    msw_irq_i   => '0',
-    mext_irq_i  => '0'
+    mtime_irq_i => mti,
+    msw_irq_i   => msi,
+    mext_irq_i  => mei
   );
 
   -- bus feedback --
-  xbus.rdata <= xmem_rdata or dump_rdata;
-  xbus.ack   <= xmem_ack   or dump_ack or trig_ack;
+  xbus.rdata <= mem_rdata;
+  xbus.ack   <= mem_ack or env_ack;
 
 
-  -- External Main Memory [rwx] - Constructed from four parallel byte-wide memories ---------
+  -- Main Memory [rwx] - Constructed from four parallel byte-wide memories ------------------
   -- -------------------------------------------------------------------------------------------
-  ext_mem_rw: process(clk_gen)
+  main_mem: process(clk_gen)
     variable mem8_bv_b0_v : mem8_bv_t(0 to (mem_size_c/4)-1) := mem8_bv_init_f(MEM_FILE, mem_size_c/4, 0);
     variable mem8_bv_b1_v : mem8_bv_t(0 to (mem_size_c/4)-1) := mem8_bv_init_f(MEM_FILE, mem_size_c/4, 1);
     variable mem8_bv_b2_v : mem8_bv_t(0 to (mem_size_c/4)-1) := mem8_bv_init_f(MEM_FILE, mem_size_c/4, 2);
@@ -173,68 +174,79 @@ begin
   begin
     if rising_edge(clk_gen) then
       -- defaults --
-      xmem_rdata <= (others => '0');
-      xmem_ack   <= '0';
+      mem_rdata <= (others => '0');
+      mem_ack   <= '0';
       -- bus access --
       if (xbus.cyc = '1') and (xbus.stb = '1') and (xbus.addr(31 downto 28) = mem_base_c(31 downto 28)) then
-        xmem_ack <= '1';
+        mem_ack <= '1';
         if (xbus.we = '1') then
           if (xbus.sel(0) = '1') then mem8_bv_b0_v(mem_addr) := to_bitvector(xbus.wdata(07 downto 00)); end if;
           if (xbus.sel(1) = '1') then mem8_bv_b1_v(mem_addr) := to_bitvector(xbus.wdata(15 downto 08)); end if;
           if (xbus.sel(2) = '1') then mem8_bv_b2_v(mem_addr) := to_bitvector(xbus.wdata(23 downto 16)); end if;
           if (xbus.sel(3) = '1') then mem8_bv_b3_v(mem_addr) := to_bitvector(xbus.wdata(31 downto 24)); end if;
         else
-          xmem_rdata(07 downto 00) <= to_stdulogicvector(mem8_bv_b0_v(mem_addr));
-          xmem_rdata(15 downto 08) <= to_stdulogicvector(mem8_bv_b1_v(mem_addr));
-          xmem_rdata(23 downto 16) <= to_stdulogicvector(mem8_bv_b2_v(mem_addr));
-          xmem_rdata(31 downto 24) <= to_stdulogicvector(mem8_bv_b3_v(mem_addr));
+          mem_rdata(07 downto 00) <= to_stdulogicvector(mem8_bv_b0_v(mem_addr));
+          mem_rdata(15 downto 08) <= to_stdulogicvector(mem8_bv_b1_v(mem_addr));
+          mem_rdata(23 downto 16) <= to_stdulogicvector(mem8_bv_b2_v(mem_addr));
+          mem_rdata(31 downto 24) <= to_stdulogicvector(mem8_bv_b3_v(mem_addr));
         end if;
       end if;
     end if;
-  end process ext_mem_rw;
+  end process main_mem;
 
   -- read/write address --
   mem_addr <= to_integer(unsigned(xbus.addr(index_size_f(mem_size_c/4)+1 downto 2)));
 
 
-  -- Terminate Simulation -------------------------------------------------------------------
+  -- Environment Control --------------------------------------------------------------------
   -- -------------------------------------------------------------------------------------------
-  sim_terminate: process(rst_gen, clk_gen)
+  env_ctrl: process(rst_gen, clk_gen)
+    file     file_v : text open write_mode is "DUT-neorv32.signature";
+    variable line_v : line;
+    variable char_v : integer;
   begin
     if (rst_gen = '0') then
-      trig_ack <= '0';
+      env_ack <= '0';
+      msi     <= '0';
+      mti     <= '0';
+      mei     <= '0';
     elsif rising_edge(clk_gen) then
-      trig_ack <= '0';
-      if (xbus.cyc = '1') and (xbus.stb = '1') and (xbus.we = '1') and
-         (xbus.addr = x"F0000000") and (xbus.wdata = x"CAFECAFE") then
-        trig_ack <= '1';
-        assert false report "Finishing simulation." severity note;
-        finish;
+      env_ack <= '0';
+      if (xbus.cyc = '1') and (xbus.stb = '1') and (xbus.we = '1') then
+        -- terminate simulation --
+        if (xbus.addr = x"F0000000") then
+          env_ack <= '1';
+          assert false report "Finishing simulation." severity note;
+          finish;
+        -- write to log file --
+        elsif (xbus.addr = x"F0000004") then
+          env_ack <= '1';
+          for i in 7 downto 0 loop -- write 32-bit as 8 lowercase HEX chars
+            write(line_v, to_hexchar_f(xbus.wdata(3+i*4 downto 0+i*4)));
+          end loop;
+          writeline(file_v, line_v);
+        -- write to console --
+        elsif (xbus.addr = x"F0000008") then
+          env_ack <= '1';
+          char_v := to_integer(unsigned(xbus.wdata(7 downto 0)));
+          if (char_v >= 128) then -- out of printable range?
+            char_v := 0;
+          end if;
+          if (char_v = 10) then -- line break: flush to console
+            writeline(output, line_v); -- console
+          elsif (char_v /= 13) then
+            write(line_v, character'val(char_v));
+          end if;
+        -- interrupt triggers --
+        elsif (xbus.addr = x"F000000C") then
+          env_ack <= '1';
+          msi     <= xbus.wdata(3);
+          mti     <= xbus.wdata(7);
+          mei     <= xbus.wdata(11);
+        end if;
       end if;
     end if;
-  end process sim_terminate;
-
-
-  -- Signature Dump -------------------------------------------------------------------------
-  -- -------------------------------------------------------------------------------------------
-  signature_dump: process(clk_gen)
-    file     dump_file : text open write_mode is "DUT-neorv32.signature";
-    variable line_v    : line;
-  begin
-    if rising_edge(clk_gen) then
-      -- defaults --
-      dump_rdata <= (others => '0');
-      dump_ack   <= '0';
-      -- bus access --
-      if (xbus.cyc = '1') and (xbus.stb = '1') and (xbus.we = '1') and (xbus.addr = x"F0000004") then
-        dump_ack <= '1';
-        for i in 7 downto 0 loop -- write 32-bit as 8x lowercase HEX chars
-          write(line_v, to_hexchar_f(xbus.wdata(3+i*4 downto 0+i*4)));
-        end loop;
-        writeline(dump_file, line_v);
-      end if;
-    end if;
-  end process signature_dump;
+  end process env_ctrl;
 
 
 end neorv32_riscof_tb_rtl;
