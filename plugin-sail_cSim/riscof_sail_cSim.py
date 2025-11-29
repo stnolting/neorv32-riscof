@@ -7,6 +7,7 @@ import logging
 import random
 import string
 import json
+from jsoncomment import JsonComment
 from string import Template
 
 import riscof.utils as utils
@@ -110,7 +111,9 @@ class sail_cSim(pluginTemplate):
 
         try:
             sail_config = subprocess.run(["sail_riscv_sim", "--print-default-config"], check= True, text=True, capture_output=True)
-            sail_config = json.loads(sail_config.stdout)
+            # Sail 0.9 generates non compliant JSON (contains C style inline comments)
+            parser = JsonComment(json)
+            sail_config = parser.loads(sail_config.stdout)
         except subprocess.CalledProcessError as e:
             print("sail_riscv_sim --print-default-config failed:", e.stderr)
             exit(1)

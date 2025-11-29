@@ -32,7 +32,7 @@ jobs:
     - name: '📦 Install Sail RISC-V reference model'
       run: |
         mkdir $GITHUB_WORKSPACE/sail-riscv
-        wget -q https://github.com/riscv/sail-riscv/releases/download/0.8/sail-riscv-Linux-x86_64.tar.gz
+        wget -q https://github.com/riscv/sail-riscv/releases/download/0.9/sail-riscv-Linux-x86_64.tar.gz
         tar -xzf $GITHUB_WORKSPACE/sail-riscv-Linux-x86_64.tar.gz -C $GITHUB_WORKSPACE/sail-riscv
         ls -al $GITHUB_WORKSPACE/sail-riscv/sail-riscv-Linux-x86_64/bin
         echo $GITHUB_WORKSPACE/sail-riscv/sail-riscv-Linux-x86_64/bin >> $GITHUB_PATH
@@ -41,6 +41,7 @@ jobs:
       run: |
         echo "upstream RISCOF is broken! https://github.com/riscv-software-src/riscof/issues/122"
         pip3 install git+https://github.com/riscv/riscof.git@d38859f85fe407bcacddd2efcd355ada4683aee4
+        pip3 install jsoncomment
 
     - name: '📦 Install GHDL'
       uses: ghdl/setup-ghdl@v1
