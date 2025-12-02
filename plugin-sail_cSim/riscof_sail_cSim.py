@@ -134,6 +134,9 @@ class sail_cSim(pluginTemplate):
         sail_config["extensions"]["Sv32"]["supported"] = True
         sail_config["extensions"]["Zcf"]["supported"] = True
 
+        # Disabling "Svrsw60t59b" since it is conflicting with disabled "Sv39"
+        sail_config["extensions"]["Svrsw60t59b"]["supported"] = False
+
         # For User-configuration: Replace this variable with your configuration. "/home/riscv-arch-test/custom_sail_config.json"
         sail_config_path = os.path.join(self.pluginpath, 'env', 'sail_config.json')
 
