@@ -2,6 +2,7 @@ name: NEORV32 RISCOF Verification
 
 on:
   push:
+  pull_request:
   workflow_dispatch:
 
 jobs:
