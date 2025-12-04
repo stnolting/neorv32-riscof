@@ -7,6 +7,7 @@ import logging
 import random
 import string
 import json
+from jsoncomment import JsonComment
 from string import Template
 
 import riscof.utils as utils
@@ -110,7 +111,9 @@ class sail_cSim(pluginTemplate):
 
         try:
             sail_config = subprocess.run(["sail_riscv_sim", "--print-default-config"], check= True, text=True, capture_output=True)
-            sail_config = json.loads(sail_config.stdout)
+            # Sail 0.9 generates non compliant JSON (contains C style inline comments)
+            parser = JsonComment(json)
+            sail_config = parser.loads(sail_config.stdout)
         except subprocess.CalledProcessError as e:
             print("sail_riscv_sim --print-default-config failed:", e.stderr)
             exit(1)
@@ -130,6 +133,9 @@ class sail_cSim(pluginTemplate):
         # Enabling extensions that are disabled by default
         sail_config["extensions"]["Sv32"]["supported"] = True
         sail_config["extensions"]["Zcf"]["supported"] = True
+
+        # Disabling "Svrsw60t59b" since it is conflicting with disabled "Sv39"
+        sail_config["extensions"]["Svrsw60t59b"]["supported"] = False
 
         # For User-configuration: Replace this variable with your configuration. "/home/riscv-arch-test/custom_sail_config.json"
         sail_config_path = os.path.join(self.pluginpath, 'env', 'sail_config.json')
