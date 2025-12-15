@@ -61,7 +61,7 @@ jobs:
       run: /bin/bash -c "chmod u+x $GITHUB_WORKSPACE/run.sh && $GITHUB_WORKSPACE/run.sh"
 
     - name: '📤 Archive test report'
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: test_report
         path: |
