@@ -15,11 +15,11 @@ from riscof.pluginTemplate import pluginTemplate
 
 logger = logging.getLogger()
 
-# Tool configuration
-HOSTGCC = "gcc -Wall -O -g"
-IMAGEGEN_PATH = "./neorv32/sw/image_gen"
-IMAGEGEN_EXE = "image_gen"
-RVOBJCOPY = "riscv-none-elf-objcopy"
+# Configuration
+RVGCCPREFIX = "riscv-none-elf-"
+GHDLEXE = "ghdl"
+RTLCORE = "../neorv32/rtl/core"
+TESTBENCH = "rvtest_tb"
 
 class neorv32(pluginTemplate):
     __model__ = "neorv32"
@@ -36,19 +36,10 @@ class neorv32(pluginTemplate):
             print("Please enter input file paths in configuration.")
             raise SystemExit(1)
 
-        # In case of an RTL based DUT, this would be point to the final binary executable of your
-        # test-bench produced by a simulator (like verilator, vcs, incisive, etc). In case of an iss or
-        # emulator, this variable could point to where the iss binary is located. If 'PATH variable
-        # is missing in the config.ini we can hardcode the alternate here.
-        self.dut_exe = os.path.join(config['PATH'] if 'PATH' in config else "","neorv32")
-
-        # compile NEORV32 image generator
-        execute = f"{HOSTGCC} {IMAGEGEN_PATH}/{IMAGEGEN_EXE}.c -o {IMAGEGEN_PATH}/{IMAGEGEN_EXE}"
-        logger.debug('DUT executing ' + execute)
-        utils.shellCommand(execute).run()
-
         # prepare simulation (GHDL)
-        execute = f"sh ./sim/ghdl_setup.sh && rm -f *.log *.signature"
+        execute = f"{GHDLEXE} -i --work=neorv32 --std=08 {RTLCORE}/*.vhd {TESTBENCH}.vhd"
+        execute += " && "
+        execute += f"{GHDLEXE} -m --std=08 --work=neorv32 {TESTBENCH}"
         logger.debug('DUT executing ' + execute)
         utils.shellCommand(execute).run()
 
@@ -89,7 +80,8 @@ class neorv32(pluginTemplate):
        # Note the march is not hardwired here, because it will change for each
        # test. Similarly the output elf name and compile macros will be assigned later in the
        # runTests function
-       self.compile_cmd = 'riscv-none-elf-gcc -march={0} \
+       self.compile_cmd = f"{RVGCCPREFIX}gcc"
+       self.compile_cmd += ' -march={0} \
          -static -mcmodel=medany -fvisibility=hidden -nostdlib -nostartfiles -g\
          -T '+self.pluginpath+'/env/link.ld\
          -I '+self.pluginpath+'/env/\
@@ -142,7 +134,7 @@ class neorv32(pluginTemplate):
           # for each test there are specific compile macros that need to be enabled. The macros in
           # the testList node only contain the macros/values. For the gcc toolchain we need to
           # prefix with "-D". The following does precisely that.
-          compile_macros= ' -D' + " -D".join(testentry['macros'])
+          compile_macros = ' -D' + " -D".join(testentry['macros'])
 
           # collect the march string required for the compiler
           marchstr = testentry['isa'].lower()
@@ -160,25 +152,17 @@ class neorv32(pluginTemplate):
           # choice.
           utils.shellCommand(cmd).run(cwd=test_dir)
 
-          # generate NEORV32 memory image
-          execute = f"{RVOBJCOPY} -I elf32-little {test_dir}/{elf} -j .text -O binary {test_dir}/main.bin"
-          execute += " && "
-          execute += f"{IMAGEGEN_PATH}/{IMAGEGEN_EXE} -t raw_hex -i {test_dir}/main.bin -o {test_dir}/main.hex"
+          # generate plain binary memory image
+          execute = f"{RVGCCPREFIX}objcopy -I elf32-little {test_dir}/{elf} -j .text -O binary {test_dir}/main.bin"
           logger.debug('DUT executing ' + execute)
           utils.shellCommand(execute).run()
 
           # print current test
           print(f"{test=}")
 
-          # execute GHDL simulation
-          execute = f"sh sim/ghdl_run.sh -gMEM_FILE={test_dir}/main.hex"
-          logger.debug('DUT executing ' + execute)
-          utils.shellCommand(execute).run()
-
-          # copy resulting signature file and trace log
-          execute = f"cp -f ./sim/*.signature {test_dir}/."
-          execute += " && "
-          execute += f"cp -f ./sim/*.log {test_dir}/."
+          # run GHDL simulation
+          execute = f"{GHDLEXE} -r --std=08 --work=neorv32 {TESTBENCH} -gTEST_DIR={test_dir}/ "
+          execute += f"--max-stack-alloc=0 --ieee-asserts=disable --assert-level=error --stop-time=4ms "
           logger.debug('DUT executing ' + execute)
           utils.shellCommand(execute).run()
 
