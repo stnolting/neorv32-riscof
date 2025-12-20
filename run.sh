@@ -1,14 +1,7 @@
 #!/usr/bin/env bash
 
 set -e
-
 cd $(dirname "$0")
-
-# show NEORV32 version
-echo "NEORV32 Version:"
-grep -rni 'neorv32/rtl/core/neorv32_package.vhd' -e 'hw_version_c'
-echo ""
-sleep 2
 
 # run riscof
 riscof run --config=config.ini \

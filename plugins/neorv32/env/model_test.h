@@ -47,25 +47,20 @@
     j     boot_end;            \
   boot_terminate:              \
     li    x10, 0xF0000000;     \
-    sw    x10, 0(x10);         \
+    sw    x10, 8(x10);         \
     j     boot_terminate;      \
   boot_end:
 
-// dump the test results (signature) via the testbench data dump module
-#define RVMODEL_HALT                       \
-  signature_dump:                          \
-    la   x4, begin_signature;              \
-    la   x5, end_signature;                \
-    li   x6, 0xF0000000;                   \
-  signature_dump_loop:                     \
-    bge  x4, x5, signature_dump_terminate; \
-    lw   x7, 0(x4);                        \
-    sw   x7, 4(x6);                        \
-    addi x4, x4, 4;                        \
-    j    signature_dump_loop;              \
-  signature_dump_terminate:                \
-    sw   x0, 0(x6);                        \
-    j    signature_dump_terminate
+// dump signature and terminate simulation
+#define RVMODEL_HALT      \
+  la x4, 0xF0000000;      \
+  la x5, begin_signature; \
+  la x6, end_signature;   \
+  sw x5, 0(x4);           \
+  sw x6, 4(x4);           \
+  halt:                   \
+    sw x0, 8(x4);         \
+    j  halt
 
 // address that causes an access fault when read or written
 #define ACCESS_FAULT_ADDRESS 0xFFFFFF00
@@ -76,7 +71,7 @@
 
 // set machine software interrupt via CLINT
 #define RVMODEL_SET_MSW_INT \
-  li x10, 0xFFF40001;       \
+  li x10, 0xFFF40000;       \
   sw x10, -1(x10);
 
 // clear machine software interrupt via CLINT
@@ -99,13 +94,13 @@
 
 // set machine external interrupt via testbench
 #define RVMODEL_SET_MEXT_INT \
-  li x10, 0xF000000C;        \
+  li x10, 0xF0000000;        \
   li x11, 1<<11;             \
-  sw x11, 0(x10);
+  sw x11, 12(x10);
 
 // clear machine external interrupt via testbench
 #define RVMODEL_CLR_MEXT_INT \
-  li x10,  0xF000000C;       \
-  sw zero, 0(x10);
+  li x10,  0xF0000000;       \
+  sw zero, 12(x10);
 
 #endif // _COMPLIANCE_MODEL_H
