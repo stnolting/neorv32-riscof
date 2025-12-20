@@ -1,3 +1,6 @@
+> [!Important]
+> **The RISC-V architecture compatibility test has been integrated into the main [NEORV32 repository](https://github.com/stnolting/neorv32).**
+
 # NEORV32 Core Verification using RISCOF
 
 [![neorv32-riscof](https://img.shields.io/github/actions/workflow/status/stnolting/neorv32-riscof/main.yml?branch=main&longCache=true&style=flat-square&label=neorv32-riscof&logo=Github%20Actions&logoColor=fff)](https://github.com/stnolting/neorv32-riscof/actions/workflows/main.yml)
@@ -37,7 +40,7 @@ takes care of installing all the required packages.
 * Python - used as the main scripting language
 
 RISCOF is configured by a [config.ini](https://github.com/stnolting/neorv32-riscof/blob/main/config.ini) that defines
-the the plugins to be used: the device-under-test (**NEORV32**) and the reference model ( **Sail RISC-V**).
+the the plugins to be used: the device-under-test (**NEORV32**) and the reference model (**Sail RISC-V**).
 Each plugin provides target-specific ISA definitions, environment files like linker scripts and low-level code for
 interaction with the platform, and Python scripts for the target-specific test runs (compiling tests, invoking the
 DUT simulator and the reference model's executable, etc.).
