@@ -1,10 +1,4 @@
-*/__*
+__pycache__
 riscof_work
-plugin-sail_cSim/env/sail_config.json
-*.bin
-*.elf
-*.hex
-*.out
-*.signature
-*.log
+*.json
 *.cf
