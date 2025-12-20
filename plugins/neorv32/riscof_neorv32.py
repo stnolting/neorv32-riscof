@@ -18,7 +18,7 @@ logger = logging.getLogger()
 # Configuration
 RVGCCPREFIX = "riscv-none-elf-"
 GHDLEXE = "ghdl"
-RTLCORE = "../neorv32/rtl/core"
+RTLCORE = "neorv32/rtl/core"
 TESTBENCH = "rvtest_tb"
 
 class neorv32(pluginTemplate):
